@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # visibleTech Store - logic (stdlib only). Serves index.html + JSON API, keeps orders/config stock in SQLite.
 # CLI (used by install.sh menu):  store.py serve | stock | orders | confirm TOKEN | addconfigs FILE_OR_FOLDER SPEED DURATION [file] | price SPEED DURATION PRICE | set KEY VALUE | show
-import os, sys, json, time, sqlite3, secrets, hashlib, threading, urllib.request, urllib.parse, re, base64
+import os, sys, json, time, calendar, sqlite3, secrets, hashlib, threading, urllib.request, urllib.parse, re, base64
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 D = os.environ.get('STORE_DIR', '/etc/visibleTech-store')
 DBF, SETF, HTML = D + '/store.db', D + '/settings.json', os.environ.get('STORE_HTML', D + '/index.html')
@@ -52,10 +52,38 @@ def db():
       CREATE TABLE IF NOT EXISTS notif_hidden(user_id INT, notif_id INT, PRIMARY KEY(user_id, notif_id));''')
     for alt in ('ALTER TABLE orders ADD COLUMN user_id INT', "ALTER TABLE offers ADD COLUMN kind TEXT DEFAULT 'offer'", 'ALTER TABLE users ADD COLUMN pw_hash TEXT', 'ALTER TABLE orders ADD COLUMN coupon TEXT', 'ALTER TABLE orders ADD COLUMN hidden INT DEFAULT 0',
                 'ALTER TABLE banners ADD COLUMN link TEXT', 'ALTER TABLE banners ADD COLUMN btn TEXT', 'ALTER TABLE banners ADD COLUMN bg TEXT', 'ALTER TABLE banners ADD COLUMN fg TEXT',
-                'ALTER TABLE banners ADD COLUMN img TEXT', 'ALTER TABLE banners ADD COLUMN pages TEXT', 'ALTER TABLE banners ADD COLUMN anim INT DEFAULT 1', 'ALTER TABLE banners ADD COLUMN dismiss INT DEFAULT 1', 'ALTER TABLE banners ADD COLUMN sort INT DEFAULT 0'):  # old databases
+                'ALTER TABLE banners ADD COLUMN img TEXT', 'ALTER TABLE banners ADD COLUMN pages TEXT', 'ALTER TABLE banners ADD COLUMN anim INT DEFAULT 1', 'ALTER TABLE banners ADD COLUMN dismiss INT DEFAULT 1', 'ALTER TABLE banners ADD COLUMN sort INT DEFAULT 0',
+                "ALTER TABLE configs ADD COLUMN vpn TEXT DEFAULT ''", 'ALTER TABLE configs ADD COLUMN expires INT DEFAULT 0', 'ALTER TABLE configs ADD COLUMN autodel INT DEFAULT 0',
+                'ALTER TABLE orders ADD COLUMN vpn TEXT', 'ALTER TABLE orders ADD COLUMN hwid TEXT', 'ALTER TABLE orders ADD COLUMN cfg_id INT'):  # old databases
         try: c.execute(alt)
         except sqlite3.OperationalError: pass
     return c
+
+
+# ---------------- VPN app lock (HWID / public key) + config validity time (EAT) ----------------
+EAT = 3 * 3600  # East Africa Time (Tanzania) = UTC+3, no daylight saving; admin times are always typed / shown in EAT
+def eat_ts(t):  # 'YYYY-MM-DDTHH:MM' typed by the admin in EAT -> unix time
+    try: return calendar.timegm(time.strptime(str(t).strip().replace(' ', 'T')[:16], '%Y-%m-%dT%H:%M')) - EAT
+    except Exception: return 0
+def eat_str(ts): return time.strftime('%Y-%m-%d %H:%M', time.gmtime(int(ts) + EAT)) if ts else ''
+def live(): return "(COALESCE(expires,0)=0 OR expires>%d)" % int(time.time())  # SQL: config still valid (not past its end time)
+def purge(c): c.execute('DELETE FROM configs WHERE order_token IS NULL AND COALESCE(autodel,0)=1 AND expires>0 AND expires<=?', (int(time.time()),))  # unsold + auto-delete + time reached
+def purge_now():
+    with LOCK, db() as c: purge(c)
+VPNS = {'ssh': 'SSH Custom', 'http': 'HTTP Custom', 'inj': 'HTTP Injector', 'npv': 'NPV Tunnel'}
+def hwid_ok(vpn, v):  # does this ID have the format of that VPN app?
+    v = str(v or '')
+    if vpn in ('ssh', 'http'): return bool(re.fullmatch(r'[a-z0-9]{32}', v))  # 32 small letters + numbers
+    if vpn == 'inj': return bool(re.fullmatch(r'[A-Z0-9]{32}', v))  # 32 CAPITAL letters + numbers
+    if vpn == 'npv': return bool(re.fullmatch(r'[A-Za-z0-9_+/=-]{40,64}', v)) and bool(re.search('[a-z]', v)) and bool(re.search('[A-Z]', v))  # random mixed case public key
+    return False
+def hwid_guess(v):  # which app an ID looks like (for a helpful error message)
+    return 'SSH Custom / HTTP Custom' if hwid_ok('ssh', v) else 'HTTP Injector' if hwid_ok('inj', v) else 'NPV Tunnel' if hwid_ok('npv', v) else ''
+def vpn_info(vpn):
+    if vpn not in VPNS: return {}
+    return dict(vpn=vpn, app=VPNS[vpn], idn='Public Key' if vpn == 'npv' else 'HWID',
+                fmt={'ssh': 'HWID ya SSH Custom: tarakimu 32, herufi ndogo na namba tu.', 'http': 'HWID ya HTTP Custom: tarakimu 32, herufi ndogo na namba tu.',
+                     'inj': 'HWID ya HTTP Injector: tarakimu 32, HERUFI KUBWA na namba tu.', 'npv': 'Public Key ya NPV Tunnel: mchanganyiko wa herufi kubwa na ndogo, namba na alama ya - (kama tarakimu 44).'}[vpn])
 
 def mkpw(pw):
     salt = secrets.token_hex(8); return salt + '$' + hashlib.pbkdf2_hmac('sha256', pw.encode(), salt.encode(), 100000).hex()
@@ -91,15 +119,20 @@ def net_of(s, plan): return next((n['name'] for n, p in allplans(s) if p is plan
 
 def deliver(token):  # paid -> hand out one unused config (atomic); returns status
     with LOCK, db() as c:
+        purge(c)
         o = c.execute('SELECT * FROM orders WHERE token=?', (token,)).fetchone()
         if not o: return 'failed'
-        if o['status'] == 'success': return 'success'
-        k = c.execute('SELECT id,content FROM configs WHERE speed=? AND duration=? AND order_token IS NULL ORDER BY id LIMIT 1', (o['speed'], o['duration'])).fetchone()
+        if o['status'] in ('success', 'need_id'): return o['status']
+        k = c.execute('SELECT id,content,vpn FROM configs WHERE speed=? AND duration=? AND order_token IS NULL AND ' + live() + ' ORDER BY id LIMIT 1', (o['speed'], o['duration'])).fetchone()
         if not k:
             c.execute("UPDATE orders SET status='no_stock' WHERE token=?", (token,)); c.execute("DELETE FROM notifs WHERE kind='pending' AND ref=?", (token,))
             if o['user_id']: notify(c, o['user_id'], 'Config zimeisha', '%s: malipo yamepokelewa lakini config zimeisha kwa sasa. Wasiliana nasi utapata config au kurejeshewa pesa.' % o['package'], 'issue', token)
             return 'no_stock'
         c.execute('UPDATE configs SET order_token=? WHERE id=?', (token, k['id']))
+        if o['price'] and k['vpn'] in VPNS:  # PAID config of a locked VPN app: keep it reserved, customer must send HWID / public key first (free configs never ask)
+            c.execute("UPDATE orders SET status='need_id',vpn=?,cfg_id=? WHERE token=?", (k['vpn'], k['id'], token)); c.execute("DELETE FROM notifs WHERE kind='pending' AND ref=?", (token,))
+            if o['user_id']: notify(c, o['user_id'], 'Malipo yamefanikiwa ✅', '%s: weka %s ya %s ndani ya \"Config Zangu\" ili upate config yako.' % (o['package'], vpn_info(k['vpn'])['idn'], VPNS[k['vpn']]), 'paid', token)
+            return 'need_id'
         c.execute("UPDATE orders SET status='success',config=? WHERE token=?", (k['content'], token)); c.execute("DELETE FROM notifs WHERE kind='pending' AND ref=?", (token,))
         if o['user_id']: notify(c, o['user_id'], 'Malipo yamefanikiwa ✅', '%s: config yako iko tayari. Itafute wakati wowote ndani ya "Config Zangu".' % o['package'], 'paid', token)
         return 'success'
@@ -141,7 +174,7 @@ def resolve_item(s, c, f):  # what is being bought: an admin "offer" or a classi
     oid = str(f.get('offer_id') or '')
     if oid:
         o = c.execute('SELECT * FROM offers WHERE id=? AND active=1', (int(oid) if oid.isdigit() else -1,)).fetchone()
-        return dict(title=o['title'], speed='offer:%d' % o['id'], duration='stock', network='', price=int(o['price'])) if o else None
+        return dict(title=o['title'], speed='offer:%d' % o['id'], duration='stock', network='', price=0) if o else None  # offers & eSIM are always free
     plan, r = find_row(s, f.get('speed_type', ''), f.get('duration', ''))
     return dict(title='%s — %s — %s' % (net_of(s, plan), plan['title'], r['label']), speed=plan['id'], duration=r['d'], network=net_of(s, plan), price=int(r['price'])) if r else None
 def apply_coupon(c, code, price):  # -> (new price, coupon row, error)
@@ -162,17 +195,17 @@ def pdate(t, end=False):
     try: return int(time.mktime(time.strptime(str(t).strip(), '%Y-%m-%d'))) + (86399 if end else 0)
     except Exception: return 0
 def admin_extra(c):
-    st = {r[0]: (r[1] or 0, r[2]) for r in c.execute("SELECT speed,SUM(order_token IS NULL),COUNT(*) FROM configs WHERE speed LIKE 'offer:%' GROUP BY 1")}
+    st = {r[0]: (r[1] or 0, r[2], r[3] or 0) for r in c.execute("SELECT speed,SUM(order_token IS NULL AND " + live() + "),COUNT(*),SUM(order_token IS NULL AND NOT " + live() + ") FROM configs WHERE speed LIKE 'offer:%' GROUP BY 1")}
     return dict(
-        offers=[dict(id=r['id'], title=r['title'], descr=r['descr'], price=r['price'], active=r['active'], kind=(r['kind'] or 'offer'), free=st.get('offer:%d' % r['id'], (0, 0))[0], total=st.get('offer:%d' % r['id'], (0, 0))[1]) for r in c.execute('SELECT * FROM offers ORDER BY id DESC')],
+        offers=[dict(id=r['id'], title=r['title'], descr=r['descr'], price=0, active=r['active'], kind=(r['kind'] or 'offer'), free=st.get('offer:%d' % r['id'], (0, 0, 0))[0], total=st.get('offer:%d' % r['id'], (0, 0, 0))[1], exp=st.get('offer:%d' % r['id'], (0, 0, 0))[2]) for r in c.execute('SELECT * FROM offers ORDER BY id DESC')],
         banners=[dict(bn_pub(r), img='', has_img=1 if r['img'] else 0, active=r['active'], starts=dstr(r['starts']), ends=dstr(r['ends']), sort=r['sort'] or 0) for r in c.execute('SELECT * FROM banners ORDER BY COALESCE(sort,0), id DESC')],
         coupons=[dict(id=r['id'], code=r['code'], kind=r['kind'], value=r['value'], active=r['active'], expires=dstr(r['expires']), max_uses=r['max_uses'], used=r['used']) for r in c.execute('SELECT * FROM coupons ORDER BY id DESC')],
         notifs=[dict(id=r[0], title=r[1], body=r[2], t=time.strftime('%m-%d %H:%M', time.localtime(r[3])), to=(r[4] or r[5] or r[6] or 'user') if r[7] else 'ALL USERS') for r in c.execute("SELECT n.id,n.title,n.body,n.created,u.email,u.phone,u.name,n.user_id FROM notifs n LEFT JOIN users u ON u.id=n.user_id WHERE n.kind='info' ORDER BY n.created DESC LIMIT 100")])
 def site_payload(s):
-    now = int(time.time())
+    now = int(time.time()); purge_now()
     with db() as c:
-        free = {r[0]: r[1] or 0 for r in c.execute("SELECT speed,SUM(order_token IS NULL) FROM configs WHERE speed LIKE 'offer:%' GROUP BY 1")}
-        offers = [dict(id=r['id'], title=r['title'], descr=r['descr'], price=r['price'], kind=(r['kind'] or 'offer'), free=free.get('offer:%d' % r['id'], 0)) for r in c.execute('SELECT * FROM offers WHERE active=1 ORDER BY id DESC')]
+        free = {r[0]: r[1] or 0 for r in c.execute("SELECT speed,SUM(order_token IS NULL AND " + live() + ") FROM configs WHERE speed LIKE 'offer:%' GROUP BY 1")}
+        offers = [dict(id=r['id'], title=r['title'], descr=r['descr'], price=0, kind=(r['kind'] or 'offer'), free=free.get('offer:%d' % r['id'], 0)) for r in c.execute('SELECT * FROM offers WHERE active=1 ORDER BY id DESC')]
         banners = [bn_pub(r) for r in c.execute('SELECT * FROM banners WHERE active=1 AND (starts=0 OR starts<=?) AND (ends=0 OR ends>=?) ORDER BY COALESCE(sort,0), id DESC', (now, now))]
     d = {k: s[k] for k in ('name', 'whatsapp', 'youtube', 'networks')}; d.update(offers=offers, banners=banners); return d
 
@@ -287,9 +320,9 @@ class H(BaseHTTPRequestHandler):
             return self.out(200, base64.b64decode(m.group(2)), m.group(1)) if m else self.out(404, {'error': 'none'})
         try:
             if sub == '/api/state':
-                c = db(); st = {k: s[k] for k in ('name', 'whatsapp', 'youtube', 'pay_api_url', 'pay_api_key', 'webhook_secret', 'admin_user', 'login_required')}
-                stock = [dict(speed=r[0], d=r[1], free=r[2], total=r[3]) for r in c.execute('SELECT speed,duration,SUM(order_token IS NULL),COUNT(*) FROM configs GROUP BY 1,2')]
-                orders = [dict(token=r[0], t=time.strftime('%m-%d %H:%M', time.localtime(r[1])), package=r[2], phone=r[3], price=r[4], status=r[5]) for r in c.execute('SELECT token,created,package,phone,price,status FROM orders ORDER BY created DESC LIMIT 300')]
+                purge_now(); c = db(); st = {k: s[k] for k in ('name', 'whatsapp', 'youtube', 'pay_api_url', 'pay_api_key', 'webhook_secret', 'admin_user', 'login_required')}
+                stock = [dict(speed=r[0], d=r[1], vpn=r[2], free=r[3] or 0, total=r[4], exp=r[5] or 0, nx=eat_str(r[6])) for r in c.execute("SELECT speed,duration,COALESCE(vpn,''),SUM(order_token IS NULL AND " + live() + "),COUNT(*),SUM(order_token IS NULL AND NOT " + live() + "),MIN(CASE WHEN order_token IS NULL AND expires>%d THEN expires END) FROM configs GROUP BY 1,2,3" % int(time.time()))]
+                orders = [dict(token=r[0], t=time.strftime('%m-%d %H:%M', time.localtime(r[1])), package=r[2], phone=r[3], price=r[4], status=r[5], vpn=VPNS.get(r[6], ''), hwid=r[7] or '') for r in c.execute('SELECT token,created,package,phone,price,status,vpn,hwid FROM orders ORDER BY created DESC LIMIT 300')]
                 return self.out(200, dict(version=6, orders_total=c.execute('SELECT COUNT(*) FROM orders').fetchone()[0], **admin_extra(c), settings=st, networks=s['networks'], stock=stock, orders=orders, users=[dict(id=r[5], email=r[0] or '', phone=r[1] or '', name=r[2] or '', t=time.strftime('%m-%d %H:%M', time.localtime(r[3])), orders=r[4]) for r in c.execute('SELECT u.email,u.phone,u.name,u.created,(SELECT COUNT(*) FROM orders o WHERE o.user_id=u.id),u.id FROM users u ORDER BY u.created DESC LIMIT 200')], user_total=c.execute('SELECT COUNT(*) FROM users').fetchone()[0]))
             if sub == '/api/save' and post:
                 for k in ('name', 'whatsapp', 'youtube', 'pay_api_url', 'pay_api_key', 'login_required'):
@@ -300,9 +333,17 @@ class H(BaseHTTPRequestHandler):
                 # 'items' = list of configs (one per uploaded file, any length / multi-line); 'text' = one config per line. No limit on count or length.
                 items = [str(x).strip() for x in f['items']] if isinstance(f.get('items'), list) else [l.strip() for l in str(f.get('text', '')).splitlines()]
                 items = [x for x in items if x]; n = 0
+                ex = str(f.get('expires') or '').strip(); exp = eat_ts(ex) if ex else 0  # valid-until, typed by the admin in EAT
+                if ex and not exp: return self.out(400, {'error': 'Wrong date / time'})
+                if exp and exp <= now: return self.out(400, {'error': 'That end time (EAT) is already in the past'})
+                vpn = str(f.get('vpn') or '') if str(f.get('vpn') or '') in VPNS else ''  # '' = no lock; free offers / eSIM never ask for an ID
+                if str(f.get('speed', '')).startswith('offer:'): vpn = ''
                 with LOCK, db() as c:
-                    for x in items: n += c.execute('INSERT OR IGNORE INTO configs(speed,duration,content) VALUES(?,?,?)', (f['speed'], f['duration'], x)).rowcount
+                    for x in items: n += c.execute('INSERT OR IGNORE INTO configs(speed,duration,content,vpn,expires,autodel) VALUES(?,?,?,?,?,?)', (f['speed'], f['duration'], x, vpn, exp, 1 if f.get('autodel') else 0)).rowcount
                 return self.out(200, {'added': n, 'duplicates': len(items) - n})
+            if sub == '/api/clearexpired' and post:
+                with LOCK, db() as c: c.execute('DELETE FROM configs WHERE speed=? AND duration=? AND order_token IS NULL AND expires>0 AND expires<=?', (f['speed'], f['duration'], int(now)))
+                return self.out(200, {'ok': True})
             if sub == '/api/clearstock' and post:
                 with LOCK, db() as c: c.execute('DELETE FROM configs WHERE speed=? AND duration=? AND order_token IS NULL', (f['speed'], f['duration']))
                 return self.out(200, {'ok': True})
@@ -314,7 +355,7 @@ class H(BaseHTTPRequestHandler):
                 with LOCK, db() as c: c.execute('DELETE FROM sessions WHERE user_id=?', (int(f['id']),)); c.execute('DELETE FROM users WHERE id=?', (int(f['id']),))
                 return self.out(200, {'ok': True})
             if sub == '/api/offer/save' and post:
-                t, d, pr, ac = str(f.get('title', '')).strip()[:80] or 'New offer', str(f.get('descr', ''))[:2000], max(0, int(f.get('price') or 0)), 1 if f.get('active') else 0
+                t, d, pr, ac = str(f.get('title', '')).strip()[:80] or 'New offer', str(f.get('descr', ''))[:2000], 0, 1 if f.get('active') else 0  # offers & eSIM are always FREE
                 with LOCK, db() as c:
                     if f.get('id'): oid = int(f['id']); c.execute('UPDATE offers SET title=?,descr=?,price=?,active=?,kind=? WHERE id=?', (t, d, pr, ac, 'esim' if f.get('kind') == 'esim' else 'offer', oid))
                     else: oid = c.execute('INSERT INTO offers(title,descr,price,active,created,kind) VALUES(?,?,?,?,?,?)', (t, d, pr, ac, int(now), 'esim' if f.get('kind') == 'esim' else 'offer')).lastrowid
@@ -413,10 +454,10 @@ class H(BaseHTTPRequestHandler):
             if not u: return self.out(401, {'error': 'login'})
             items = []
             ES = esim_ids()
-            for r in db().execute("SELECT token,created,package,price,config,speed FROM orders WHERE user_id=? AND status='success' AND COALESCE(hidden,0)=0 ORDER BY created DESC LIMIT 500", (u['id'],)):
+            for r in db().execute("SELECT token,created,package,price,config,speed,status,vpn FROM orders WHERE user_id=? AND status IN ('success','need_id') AND COALESCE(hidden,0)=0 ORDER BY created DESC LIMIT 500", (u['id'],)):
                 offer = str(r[5] or '').startswith('offer:'); parts = [x.strip() for x in str(r[2]).split(' — ')]
                 net, plan, label = (('eSIM' if str(r[5])[6:] in ES else 'Offers'), r[2], '') if offer or len(parts) < 3 else (parts[0], parts[1], ' — '.join(parts[2:]))
-                items.append(dict(token=r[0], t=time.strftime('%Y-%m-%d %H:%M', time.localtime(r[1])), package=r[2], price=r[3], config=r[4] or '', kind='offer' if offer else 'package', net=net, plan=plan, label=label))
+                items.append(dict(token=r[0], t=time.strftime('%Y-%m-%d %H:%M', time.localtime(r[1])), package=r[2], price=r[3], config=r[4] or '', kind='offer' if offer else 'package', net=net, plan=plan, label=label, need_id=1 if r[6] == 'need_id' else 0, **(vpn_info(r[7]) if r[6] == 'need_id' else {})))
             return self.out(200, {'items': items})
         if p.startswith('/api/banner-img/'):
             if not self.me(): return self.out(401, {'error': 'login'})
@@ -429,9 +470,9 @@ class H(BaseHTTPRequestHandler):
         if p.startswith('/api/order/status/'):
             u = self.me()
             if not u: return self.out(401, {'error': 'login'})
-            o = db().execute('SELECT status,config,user_id FROM orders WHERE token=?', (p.rsplit('/', 1)[1],)).fetchone()
+            o = db().execute('SELECT status,config,user_id,vpn FROM orders WHERE token=?', (p.rsplit('/', 1)[1],)).fetchone()
             if not o or o['user_id'] not in (None, u['id']): return self.out(404, {'payment_status': 'failed'})
-            return self.out(200, {'payment_status': o['status'], 'config': o['config'] or ''})
+            return self.out(200, dict(payment_status=o['status'], config=o['config'] or '', **(vpn_info(o['vpn']) if o['status'] == 'need_id' else {})))
         if p.startswith('/r/'):
             u = self.me()
             if not u: return self.out(302, b'', 'text/html', hdr=[('Location', '/')])
@@ -465,6 +506,24 @@ class H(BaseHTTPRequestHandler):
             with LOCK, db() as c:
                 for t in toks: c.execute("UPDATE orders SET hidden=1 WHERE token=? AND user_id=? AND status='success'", (t, u['id']))
             return self.out(200, {'ok': True, 'deleted': len(toks)})
+        if p == '/api/order/hwid':  # PAID order of a locked VPN app: customer sends HWID / public key -> format checked against that VPN -> config released
+            u = self.me()
+            if not u: return self.out(401, {'error': 'login'})
+            ip, now = self.ip(), time.time(); HITS['h' + ip] = [t for t in HITS.get('h' + ip, []) if now - t < 600] + [now]
+            if len(HITS['h' + ip]) > 30: return self.out(429, {'status': 'error', 'message': 'Maombi mengi mno. Subiri dakika chache.'})
+            tok, v = str(f.get('token', ''))[:60], str(f.get('hwid', '')).strip()
+            with LOCK, db() as c:
+                o = c.execute('SELECT * FROM orders WHERE token=? AND user_id=?', (tok, u['id'])).fetchone()
+                if not o or o['status'] != 'need_id': return self.out(400, {'status': 'error', 'message': 'Oda hii haihitaji ID.'})
+                inf = vpn_info(o['vpn'])
+                if not hwid_ok(o['vpn'], v):
+                    g = hwid_guess(v); msg = ('ID hii inaonekana ni ya %s, lakini config yako ni ya %s. Weka %s ya %s.' % (g, inf['app'], inf['idn'], inf['app'])) if g else ('%s si sahihi. %s' % (inf['idn'], inf['fmt']))
+                    return self.out(400, {'status': 'error', 'message': msg})
+                k = c.execute('SELECT content FROM configs WHERE id=? AND order_token=?', (o['cfg_id'], tok)).fetchone()
+                if not k: return self.out(400, {'status': 'error', 'message': 'Config haipatikani. Wasiliana nasi.'})
+                c.execute("UPDATE orders SET status='success',config=?,hwid=? WHERE token=?", (k['content'], v, tok))
+                notify(c, u['id'], 'Config iko tayari ✅', '%s: config yako iko tayari ndani ya "Config Zangu".' % o['package'], 'paid', tok + ':ok')
+            return self.out(200, {'status': 'success', 'config': k['content']})
         if p == '/api/coupon':
             if not self.me(): return self.out(401, {'error': 'login'})
             ip, now = self.ip(), time.time(); HITS['c' + ip] = [t for t in HITS.get('c' + ip, []) if now - t < 600] + [now]
@@ -491,8 +550,9 @@ class H(BaseHTTPRequestHandler):
                     if err: return self.out(400, {'status': 'error', 'message': err})
                 if price and (len(phone) != 10 or not phone.startswith('0') or phone[:3] in ('074', '075', '076')):
                     return self.out(400, {'status': 'error', 'message': 'Namba ya simu si sahihi.'})
-                if it['speed'].startswith('offer:') and not c.execute('SELECT 1 FROM configs WHERE speed=? AND duration=? AND order_token IS NULL LIMIT 1', (it['speed'], it['duration'])).fetchone():
-                    return self.out(200, {'status': 'error', 'message': 'Ofa hii imeisha kwa sasa.'})
+                purge(c)
+                if not c.execute('SELECT 1 FROM configs WHERE speed=? AND duration=? AND order_token IS NULL AND ' + live() + ' LIMIT 1', (it['speed'], it['duration'])).fetchone():
+                    return self.out(200, {'status': 'error', 'message': 'Ofa hii imeisha kwa sasa.' if it['speed'].startswith('offer:') else 'Kifurushi hiki kimeisha kwa sasa.'})
                 c.execute('INSERT INTO orders(token,created,package,speed,duration,network,phone,price,status,user_id,coupon) VALUES(?,?,?,?,?,?,?,?,?,?,?)', (token, int(now), it['title'], it['speed'], it['duration'], it['network'], phone, price, 'pending', me['id'], kc['code'] if kc else None))
                 if kc: c.execute('UPDATE coupons SET used=used+1 WHERE id=?', (kc['id'],))
             if not price:
