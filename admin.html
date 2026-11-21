@@ -1,0 +1,81 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Store Admin</title>
+<style>
+:root{color-scheme:dark;--bg:#0A0F1C;--card:#111A2E;--line:#22304A;--ink:#E8EEF8;--mute:#93A4BE;--blue:#1A4BFF;--amber:#FFB21E;--ok:#0E9F6E;--bad:#D93A3A}
+*{box-sizing:border-box;margin:0}body{font:15px system-ui,sans-serif;background:var(--bg);color:var(--ink);padding-bottom:70px}
+.w{max-width:900px;margin:0 auto;padding:14px}h2{font-size:18px;margin:6px 0 12px}h3{font-size:15px;margin:0 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+input,select,textarea{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit}
+label{display:block;font-size:12px;color:var(--mute);margin:8px 0 4px}
+button{font:700 14px system-ui;border:0;border-radius:10px;padding:10px 14px;background:var(--blue);color:#fff;cursor:pointer}
+button.a{background:var(--amber);color:#0B1B2E}button.g{background:#1D3350}button.r{background:var(--bad)}
+.tabs{position:fixed;bottom:0;left:0;right:0;display:flex;background:#060A14;border-top:1px solid var(--line)}
+.tabs button{flex:1;border-radius:0;background:none;color:var(--mute);padding:14px 4px}.tabs button.on{color:var(--amber)}
+.row{display:grid;grid-template-columns:1.2fr 1fr .8fr auto auto;gap:6px;align-items:center;margin-bottom:6px}
+.o{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:10px 0;border-top:1px solid var(--line);font-size:13px}
+.b{padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700;background:#1D3350}.b.success{background:var(--ok)}.b.failed{background:var(--bad)}.b.pending,.b.no_stock{background:var(--amber);color:#000}
+#toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);background:var(--card);border:1px solid var(--line);padding:10px 18px;border-radius:12px;display:none}
+.nh{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}.nh h3{margin:0}.nh button{padding:6px 10px;font-size:12px}
+.hide{display:none}@media(max-width:620px){.row{grid-template-columns:1fr 1fr}}
+</style></head><body><div class="w">
+<div id="login" class="card hide" style="max-width:380px;margin:60px auto"><h2>🔐 Store Admin</h2><label>Username</label><input id="lu" autocomplete="username"><label>Password</label><input id="lp" type="password" autocomplete="current-password"><br><br><button style="width:100%" onclick="login()">Login</button></div>
+<div id="app" class="hide">
+<div id="t-orders"><h2>Orders</h2><button class="g" onclick="load()">↻ Refresh</button><div class="card" id="orders" style="margin-top:10px"></div></div>
+<div id="t-pk" class="hide"><h2>Networks, plans &amp; prices</h2><div id="plans"></div><button class="a" style="width:100%" onclick="saveAll()">💾 Save packages</button></div>
+<div id="t-stock" class="hide"><h2>Config stock</h2><div id="oldwarn" class="card hide" style="border-color:var(--bad);color:#ffb4b4"><b>⚠ Your server still runs an OLD store.py.</b><br>Networks and multi-config upload will NOT work until you update it (copy the new store.py to /usr/local/bin/visibleTech-store.py, then: systemctl restart visibleTech-store).</div><div class="card" id="stock"></div>
+<div class="card"><h3>Add configs</h3><label>Package</label><select id="sp"></select><label>Upload config files (select as many as you want — each file = one config)</label><input id="sf" type="file" multiple style="padding:8px"><label>How to read each file</label><select id="sm"><option value="file">Whole file = ONE config (long / multi-line configs)</option><option value="lines">Each line = one config</option></select><div id="sinfo" style="font-size:12px;color:var(--mute);margin-top:6px"></div><br><button onclick="addFiles()">⬆ Upload files to this package</button>
+<hr style="border:0;border-top:1px solid var(--line);margin:16px 0"><label>Or paste (one config per line)</label><textarea id="st" rows="5" placeholder="ssc://..."></textarea><br><br><button class="g" onclick="addCfg()">Add pasted text</button></div></div>
+<div id="t-users" class="hide"><h2>Users <span id="ucount" style="color:var(--mute);font-size:13px"></span></h2><div class="card" id="users"></div></div>
+<div id="t-set" class="hide"><h2>Settings</h2><div class="card"><label>Site name</label><input id="s_name"><label>WhatsApp number (255...)</label><input id="s_whatsapp"><label>YouTube link</label><input id="s_youtube"><label>Payment API URL</label><input id="s_pay_api_url"><label>Payment API key</label><input id="s_pay_api_key"><label>Webhook URL (give to your payment provider)</label><input id="wh" readonly><br><br><button class="a" onclick="saveAll()">💾 Save settings</button></div>
+<div class="card"><h3>👤 Customer login</h3>
+<label style="display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink)"><input type="checkbox" id="s_login_required" style="width:auto"> Customers must log in (or sign up) before they can buy</label>
+<div style="font-size:12px;color:var(--mute);margin-top:6px">Customers sign up with email + phone + password. Passwords are saved on this VPS only as a salted hash (nobody, including you, can read them). If a customer forgets a password, set a new one in the Users tab.</div>
+<br><button class="a" onclick="saveAll()">💾 Save</button></div>
+<div class="card"><h3>Change admin password</h3><input id="np" type="password" placeholder="New password (min 8)"><br><br><button onclick="chpw()">Change</button></div></div>
+<div class="tabs"><button data-t="orders" class="on">🧾 Orders</button><button data-t="pk">📦 Packages</button><button data-t="stock">🔑 Stock</button><button data-t="users">👥 Users</button><button data-t="set">⚙️ Settings</button></div></div></div>
+<div id="toast"></div>
+<script>
+const B=location.pathname.replace(/\/$/,''),$=i=>document.getElementById(i);let S=null;
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',2800)}
+async function api(p,b){const r=await fetch(B+'/api/'+p,b?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}:{});
+  if(r.status===401){$('app').classList.add('hide');$('login').classList.remove('hide');throw 0}const d=await r.json();if(!r.ok){toast(d.error||'Error');throw 0}return d}
+async function login(){try{await api('login',{user:$('lu').value,password:$('lp').value});$('login').classList.add('hide');load()}catch(e){}}
+async function load(){try{S=await api('state')}catch(e){return}S.networks=S.networks||[];S.stock=S.stock||[];S.users=S.users||[];$('login').classList.add('hide');$('app').classList.remove('hide');draw()}
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5),P=(a,i)=>'S.networks['+a+'].plans['+i+']';
+function planHtml(a,i,p){const q=P(a,i);
+ return '<div class="card" style="background:#0D1526"><div class="nh"><h3>⚡ Speed / plan</h3><button class="r" onclick="delPlan('+a+','+i+')">Delete plan</button></div><label>Speed title</label><input value="'+esc(p.title)+'" oninput="'+q+'.title=this.value"><label>Speed range</label><input value="'+esc(p.range)+'" oninput="'+q+'.range=this.value"><label>Footer text</label><input value="'+esc(p.footer)+'" oninput="'+q+'.footer=this.value"><label>Card colour</label><select onchange="'+q+'.cls=this.value">'+[['mid','Blue'],['nor','Grey'],['gld','Gold'],['grn','Green']].map(c=>'<option value="'+c[0]+'"'+(p.cls==c[0]?' selected':'')+'>'+c[1]+'</option>').join('')+'</select><label>Packages: name · sub-name · price (0 = free) · recommended</label>'+
+  p.rows.map((r,j)=>'<div class="row"><input value="'+esc(r.label)+'" oninput="'+q+'.rows['+j+'].label=this.value"><input value="'+esc(r.small)+'" oninput="'+q+'.rows['+j+'].small=this.value"><input type="number" min="0" value="'+r.price+'" oninput="'+q+'.rows['+j+'].price=+this.value"><input type="radio" style="width:auto" name="b'+a+'_'+i+'" '+(r.best?'checked':'')+' onchange="best('+a+','+i+','+j+')"><button class="r" onclick="delRow('+a+','+i+','+j+')">✕</button></div>').join('')+'<button class="g" onclick="addRow('+a+','+i+')">+ Add package</button></div>'}
+function draw(){
+ $('oldwarn').classList.toggle('hide',S.version>=5);
+ $('orders').innerHTML=S.orders.map(o=>'<div class="o"><div><b>'+esc(o.package)+'</b><br>'+esc(o.phone||'free')+' · '+o.price+'/= · '+o.t+'</div><div><span class="b '+o.status+'">'+o.status+'</span> '+(o.status=='pending'||o.status=='no_stock'?'<button class="g" onclick="conf(\''+o.token+'\')">Confirm</button>':'')+'</div></div>').join('')||'No orders yet';
+ $('plans').innerHTML=S.networks.map((n,a)=>'<div class="card" style="border-color:var(--amber)"><div class="nh"><h3>🌐 Network</h3><button class="r" onclick="delNet('+a+')">Delete network</button></div><input value="'+esc(n.name)+'" oninput="S.networks['+a+'].name=this.value" placeholder="Network name (Halotel, Airtel, Tigo ...)">'+n.plans.map((p,i)=>planHtml(a,i,p)).join('')+'<button class="g" style="margin-top:6px" onclick="addPlan('+a+')">+ Add speed / plan to this network</button></div>').join('')+'<button class="g" style="width:100%;margin-bottom:12px" onclick="addNet()">+ Add network</button>';
+ $('sp').innerHTML=S.networks.flatMap(n=>n.plans.flatMap(p=>p.rows.map(r=>'<option value="'+esc(p.id)+'|'+esc(r.d)+'">'+esc(n.name+' — '+p.title+' — '+r.label)+'</option>'))).join('');
+ $('stock').innerHTML=S.networks.map(n=>'<h3 style="margin-top:6px;color:var(--amber)">'+esc(n.name)+'</h3>'+n.plans.flatMap(p=>p.rows.map(r=>{const k=S.stock.find(x=>x.speed==p.id&&x.d==r.d)||{free:0,total:0};return '<div class="o"><span>'+esc(p.title+' — '+r.label)+'</span><span><b style="color:'+(k.free?'var(--ok)':'var(--bad)')+'">'+k.free+' free</b> / '+k.total+' <button class="g" onclick="clr(\''+p.id+'\',\''+r.d+'\')">Clear unused</button></span></div>'}) ).join('')).join('')||'No networks yet';
+ for(const k of ['name','whatsapp','youtube','pay_api_url','pay_api_key'])$('s_'+k).value=S.settings[k]||'';
+ $('s_login_required').checked=S.settings.login_required=='1';
+ $('ucount').textContent='('+(S.user_total||0)+' total)';
+ $('users').innerHTML=(S.users||[]).map(u=>'<div class="o"><div><b>'+esc(u.name||u.email)+'</b><br>'+esc(u.email)+' · +'+esc(u.phone)+'<br><span style="color:var(--mute)">'+u.orders+' orders · '+u.t+'</span></div><div style="display:flex;gap:6px"><button class="g" onclick="uPw('+u.id+')">New password</button><button class="r" onclick="uDel('+u.id+')">✕</button></div></div>').join('')||'No users yet';
+ $('wh').value=location.origin+'/api/webhook/'+S.settings.webhook_secret}
+function best(a,i,j){S.networks[a].plans[i].rows.forEach((r,k)=>r.best=k==j?1:0)}
+function delRow(a,i,j){if(confirm('Remove this package? (its stock stays)')){S.networks[a].plans[i].rows.splice(j,1);draw()}}
+function addRow(a,i){S.networks[a].plans[i].rows.push({d:'d'+uid(),label:'Siku 1',small:'Siku 1',price:1000,best:0});draw()}
+function addPlan(a){S.networks[a].plans.push({id:'p'+uid(),cls:'nor',title:'New speed',range:'',footer:'',rows:[{d:'d'+uid(),label:'Siku 7',small:'Wiki 1',price:1000,best:0}]});draw()}
+function delPlan(a,i){if(confirm('Delete this whole plan and its packages? (its stock stays)')){S.networks[a].plans.splice(i,1);draw()}}
+function addNet(){S.networks.push({id:'n'+uid(),name:'New network',plans:[]});draw()}
+function delNet(a){if(confirm('Delete this network with all its plans and packages? (stock stays)')){S.networks.splice(a,1);draw()}}
+async function saveAll(){const s={};for(const k of ['name','whatsapp','youtube','pay_api_url','pay_api_key'])s[k]=$('s_'+k).value;s.login_required=$('s_login_required').checked?'1':'0';try{await api('save',{settings:s,networks:S.networks});toast('Saved ✅');load()}catch(e){}}
+async function addCfg(){if(!(S.version>=5)&&$('st').value.length>15000)return toast('Old store.py on server - update it first');const[v,d]=$('sp').value.split('|');try{const r=await api('configs',{speed:v,duration:d,text:$('st').value});toast('Added '+r.added);$('st').value='';load()}catch(e){}}
+async function addFiles(){if(!(S.version>=5))return toast('Old store.py on server - update it first');const fl=[...$('sf').files];if(!fl.length)return toast('Choose files first');const[v,d]=$('sp').value.split('|'),mode=$('sm').value;
+ const items=[];for(const f of fl){const t=(await f.text()).trim();if(!t)continue;if(mode=='lines')t.split(/\r?\n/).forEach(l=>{if(l.trim())items.push(l.trim())});else items.push(t)}
+ if(!items.length)return toast('Files are empty');let added=0,dup=0,i=0,sent=0;
+ while(i<items.length){const b=[];let sz=0;while(i<items.length&&(!b.length||sz+items[i].length<700000)){b.push(items[i]);sz+=items[i].length;i++}
+  try{const r=await api('configs',{speed:v,duration:d,items:b});added+=r.added;dup+=r.duplicates||0;sent+=b.length;$('sinfo').textContent='Uploading '+sent+' / '+items.length+' ...'}catch(e){$('sinfo').textContent='Stopped at '+sent+' / '+items.length+' (added '+added+')';load();return}}
+ $('sinfo').textContent='Done: '+added+' added, '+dup+' duplicates skipped (of '+items.length+')';toast('Added '+added);$('sf').value='';load()}
+async function uPw(id){const p=prompt('New password for this customer (min 6 characters):');if(!p)return;try{await api('user/password',{id:id,password:p});toast('Password changed')}catch(e){}}
+async function uDel(id){if(confirm('Delete this customer account? (their orders stay)')){try{await api('user/delete',{id:id});load()}catch(e){}}}
+async function clr(v,d){if(confirm('Delete all UNUSED configs of this package?')){try{await api('clearstock',{speed:v,duration:d});load()}catch(e){}}}
+async function conf(t){try{const r=await api('confirm',{token:t});toast('Result: '+r.result);load()}catch(e){}}
+async function chpw(){try{await api('password',{password:$('np').value});toast('Password changed, login again');load()}catch(e){}}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x==b));['orders','pk','stock','users','set'].forEach(t=>$('t-'+t).classList.toggle('hide',t!=b.dataset.t))});
+load();setInterval(()=>{if(!$('app').classList.contains('hide')&&document.activeElement.tagName!='INPUT'&&document.activeElement.tagName!='TEXTAREA')api('state').then(d=>{S.orders=d.orders;S.stock=d.stock;S.version=d.version;if(!$('t-orders').classList.contains('hide'))draw()}).catch(()=>{})},20000);
+</script></body></html>
