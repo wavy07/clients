@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>visibleTech – Online Cloud Config kwa Halotel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{--paper:#0A0F1C;--ink:#E8EEF8;--deep:#060A14;--dk:#0B1B2E;--blue:#1A4BFF;--blue-d:#0F34C2;--amber:#FFB21E;--mint:#0E9F6E;--line:#22304A;--mute:#93A4BE;--card:#111A2E;--r:14px}
+*{box-sizing:border-box;margin:0}
+html{color-scheme:dark;scroll-behavior:smooth;scroll-padding-top:72px}
+body{font-family:Figtree,system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:'Bricolage Grotesque',Figtree,sans-serif;line-height:1.08;letter-spacing:-.02em}
+a{color:inherit}
+.hidden{display:none!important}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;font:700 15px Figtree,sans-serif;padding:14px 22px;border-radius:12px;border:0;cursor:pointer;text-decoration:none;transition:transform .15s,background .15s}
+.btn:active{transform:scale(.98)}
+.btn-amber{background:var(--amber);color:var(--dk)}.btn-amber:hover{background:#ffc247}
+.btn-blue{background:var(--blue);color:#fff}.btn-blue:hover{background:var(--blue-d)}
+.btn-ghost{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.35)}.btn-ghost:hover{background:rgba(255,255,255,.1)}
+
+/* top bar */
+.top{position:sticky;top:0;z-index:40;background:var(--deep);color:#fff;border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;height:64px;gap:16px}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;font:800 22px 'Bricolage Grotesque',sans-serif;letter-spacing:-.03em}
+.logo b{color:var(--amber);font-weight:800}
+.nav{display:flex;gap:26px;font-size:14px;font-weight:600}
+.nav a{text-decoration:none;color:#C5D0E0}.nav a:hover{color:#fff}
+.top .btn{padding:10px 16px;font-size:14px}
+
+/* hero */
+.hero{background:var(--deep);color:#fff;padding:56px 0 72px;overflow:hidden}
+.hero .wrap{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}
+.hero h1{font-size:clamp(40px,6.4vw,72px);font-weight:800}
+.hero p.lead{margin:20px 0 28px;color:#C5D0E0;font-size:18px;max-width:46ch}
+.cta{display:flex;flex-wrap:wrap;gap:12px}
+.ladder{background:#12263D;border:1px solid #223B58;border-radius:20px;padding:26px 24px 22px}
+.ladder h3{font-size:15px;color:#9FB2CB;font-weight:600;letter-spacing:0;margin-bottom:18px}
+.tiers{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.bars{display:flex;align-items:flex-end;gap:6px;height:132px;border-bottom:2px solid #2C4666}
+.bars i{flex:1;border-radius:5px 5px 0 0;transform-origin:bottom;animation:rise .9s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*70ms)}
+.t1 .bars i{background:#6F8CFF}.t2 .bars i{background:var(--amber)}
+.t1 .bars i:nth-child(1){height:14%}.t1 .bars i:nth-child(2){height:24%}.t1 .bars i:nth-child(3){height:34%}.t1 .bars i:nth-child(4){height:44%}.t1 .bars i:nth-child(5){height:54%}
+.t2 .bars i:nth-child(1){height:46%}.t2 .bars i:nth-child(2){height:60%}.t2 .bars i:nth-child(3){height:74%}.t2 .bars i:nth-child(4){height:88%}.t2 .bars i:nth-child(5){height:100%}
+.tiers b{display:block;margin-top:10px;font:800 17px 'Bricolage Grotesque',sans-serif}
+.tiers span{font-size:13px;color:#9FB2CB}
+.live{display:flex;align-items:center;gap:8px;margin-top:20px;font-size:13px;color:#9FB2CB}
+.dot{width:9px;height:9px;border-radius:50%;background:#2EE6A0;box-shadow:0 0 0 0 rgba(46,230,160,.6);animation:pulse 2s infinite}
+@keyframes rise{from{transform:scaleY(0)}}
+@keyframes pulse{70%{box-shadow:0 0 0 9px rgba(46,230,160,0)}100%{box-shadow:0 0 0 0 rgba(46,230,160,0)}}
+
+/* steps */
+.steps{background:var(--card);border-bottom:1px solid var(--line)}
+.steps ol{list-style:none;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:0}
+.steps li{padding:24px 24px 24px 0;display:flex;gap:14px;align-items:flex-start}
+.steps li+li{padding-left:24px;border-left:1px solid var(--line)}
+.steps .n{flex:none;width:32px;height:32px;border-radius:50%;background:var(--blue);color:#fff;font-weight:800;display:grid;place-items:center;font-size:14px}
+.steps strong{display:block;font-size:16px}.steps small{color:var(--mute);font-size:14px}
+.steps a{color:#8FA9FF;font-weight:600}
+
+/* pricing */
+section.pad{padding:72px 0}
+.head{max-width:620px;margin-bottom:36px}
+.head h2{font-size:clamp(30px,4.4vw,44px);font-weight:800}
+.head p{color:var(--mute);margin-top:10px}
+.plans{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+.plan{background:var(--card);border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.plan header{padding:22px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.plan.mid header{background:var(--blue);color:#fff}
+.plan.nor header{background:#1A2740}
+.plan h3{font-size:24px;font-weight:800}
+.plan header span{font-size:14px;font-weight:600;opacity:.85;text-align:right}
+.row{display:grid;grid-template-columns:1fr auto auto;gap:16px;align-items:center;padding:18px 24px;border-top:1px solid var(--line);position:relative}
+.row:first-of-type{border-top:0}
+.row .d{font-weight:700}.row .d small{display:block;font-weight:500;color:var(--mute);font-size:13px}
+.row .p{font:800 22px 'Bricolage Grotesque',sans-serif;text-align:right}
+.row .btn{padding:10px 18px;font-size:14px}
+.row.best{background:#241E0E}
+.tag{display:inline-block;background:var(--amber);color:var(--dk);font-size:12px;font-weight:700;padding:2px 9px;border-radius:99px;margin-left:8px;vertical-align:middle}
+.plan footer{padding:16px 24px;background:var(--paper);border-top:1px solid var(--line);font-size:13px;color:var(--mute)}
+.plan footer i{color:var(--mint);margin-right:6px}
+
+/* servers / faq / support */
+.alt{background:var(--card);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+details{background:var(--card);border:1px solid var(--line);border-radius:var(--r);margin-bottom:12px}
+details[open]{border-color:var(--blue)}
+summary{cursor:pointer;padding:18px 22px;font-weight:700;list-style:none;display:flex;justify-content:space-between;gap:16px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-size:22px;line-height:1;color:#8FA9FF}
+details[open] summary::after{content:"–"}
+details p{padding:0 22px 20px;color:var(--mute)}
+.dls{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.help{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.hc{display:flex;gap:18px;align-items:center;padding:24px;border-radius:20px;text-decoration:none;border:1px solid var(--line);background:var(--card);transition:border-color .15s}
+.hc:hover{border-color:var(--ink)}
+.hc i{font-size:42px}.hc strong{display:block;font:800 20px 'Bricolage Grotesque',sans-serif}.hc span{color:var(--mute);font-size:15px}
+.wa i{color:#25D366}.yt i{color:#E5322D}
+footer.site{background:var(--deep);border-top:1px solid var(--line);color:#9FB2CB;padding:36px 0;font-size:14px}
+footer.site .wrap{display:flex;flex-wrap:wrap;gap:16px 32px;justify-content:space-between;align-items:center}
+footer.site a{text-decoration:none}footer.site a:hover{color:#fff}
+
+/* modal */
+#payment-modal{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(11,27,46,.7);backdrop-filter:blur(6px)}
+.sheet{background:var(--card);border:1px solid var(--line);width:100%;max-width:460px;border-radius:22px;overflow:hidden;max-height:94vh;overflow-y:auto}
+.sheet .mh{display:flex;justify-content:space-between;align-items:flex-start;padding:20px 22px;background:var(--deep);color:#fff}
+.sheet .mh small{color:var(--amber);font-weight:700;font-size:13px}
+.sheet .mh h3{font-size:21px;font-weight:800}
+.x{background:#1D3350;color:#fff;border:0;width:36px;height:36px;border-radius:10px;cursor:pointer}
+.mb{padding:22px}
+.total{display:flex;justify-content:space-between;align-items:center;background:#241E0E;border:1px solid #4A3A12;border-radius:12px;padding:14px 16px;margin-bottom:18px;font-weight:600}
+.total b{font:800 24px 'Bricolage Grotesque',sans-serif}
+.mb label.l{display:block;font-weight:700;font-size:14px;margin-bottom:8px}
+.ph{position:relative;margin-bottom:6px}
+.ph span{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-weight:700;color:var(--mute)}
+.ph input{width:100%;font:600 18px Figtree,sans-serif;letter-spacing:.08em;padding:14px 14px 14px 58px;border:1.5px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink)}
+.ph input:focus{outline:none;border-color:var(--blue)}
+.hint{font-size:12px;color:var(--mute);margin-bottom:18px}
+.provs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
+.provider-card{position:relative;cursor:pointer;border:1.5px solid var(--line);border-radius:12px;padding:12px 6px;text-align:center;font-size:12px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:8px}
+.provider-card input{position:absolute;opacity:0;pointer-events:none}
+.radio-dot{width:16px;height:16px;border-radius:50%;border:2px solid #A5B3C6;display:grid;place-items:center}
+.radio-dot::after{content:"";width:8px;height:8px;border-radius:50%;background:transparent}
+.provider-card:has(input:checked){border-color:var(--blue);background:#14224A}
+.provider-card input:checked~.radio-dot{border-color:var(--blue)}
+.provider-card input:checked~.radio-dot::after{background:var(--blue)}
+.provider-card:has(input:focus-visible){outline:3px solid var(--amber)}
+#pay-btn{width:100%}
+.center{text-align:center;padding:18px 0}
+.center h4{font:800 21px 'Bricolage Grotesque',sans-serif;margin:14px 0 6px}
+.center p{color:var(--mute);font-size:14px}
+.spin{width:64px;height:64px;margin:0 auto;border-radius:50%;border:5px solid #22304A;border-top-color:var(--blue);animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.ok{font-size:54px;color:var(--mint)}.bad{font-size:54px;color:#D93A3A}
+.cfg{display:flex;gap:10px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:16px 0 12px;text-align:left}
+.cfg span{flex:1;font:12px ui-monospace,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cfg button{background:var(--blue);color:#fff;border:0;border-radius:8px;padding:7px 12px;font-weight:700;cursor:pointer}
+.two{display:flex;gap:10px}.two .btn{flex:1;padding:12px}
+.rc{display:block;margin-top:12px;font-size:12px;color:var(--mute)}
+#toast{position:fixed;left:50%;bottom:20px;z-index:70;transform:translate(-50%,30px);opacity:0;background:var(--card);border:1px solid var(--line);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:600;transition:.25s;pointer-events:none;max-width:90vw;text-align:center}
+#toast.show{transform:translate(-50%,0);opacity:1}
+
+@media(max-width:820px){
+ .hero .wrap,.plans,.help,.dls{grid-template-columns:1fr}
+ .nav{display:none}
+ .steps ol{grid-template-columns:1fr}
+ .steps li,.steps li+li{padding:16px 0;border-left:0}
+ .steps li+li{border-top:1px solid var(--line)}
+ .row{grid-template-columns:1fr auto;row-gap:10px}
+ .row .btn{grid-column:1/-1}
+ .row .p{text-align:right}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<div class="top"><div class="wrap">
+  <a class="logo" href="#top" aria-label="visibleTech">
+    <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><rect x="2" y="17" width="5" height="11" rx="1.5" fill="#6F8CFF"/><rect x="10" y="11" width="5" height="17" rx="1.5" fill="#6F8CFF"/><rect x="18" y="5" width="5" height="23" rx="1.5" fill="#FFB21E"/></svg>
+    <span>visible<b>Tech</b></span>
+  </a>
+  <nav class="nav" aria-label="Menyu kuu"><a href="#vifurushi">Vifurushi</a><a href="#faq">Maswali</a><a href="#msaada">Msaada</a></nav>
+  <a class="btn btn-amber" href="#vifurushi">Lipia Sasa</a>
+</div></div>
+
+<main id="top">
+<section class="hero"><div class="wrap">
+  <div>
+    <h1>Internet isiyo na kikomo kwa Halotel.</h1>
+    <p class="lead">Chagua kifurushi, lipia kwa simu, na config yako inafika papo hapo. Soma maelekezo kabla ya kuanza kutumia.</p>
+    <div class="cta">
+      <a class="btn btn-amber" href="#vifurushi"><i class="fa-solid fa-bolt"></i> Chagua kifurushi</a>
+      <a class="btn btn-ghost" href="#pakua"><i class="fa-solid fa-circle-down"></i> Pakua app</a>
+    </div>
+  </div>
+  <div class="ladder" aria-label="Kasi za vifurushi">
+    <h3>Kasi za vifurushi vyetu</h3>
+    <div class="tiers">
+      <div class="t1"><div class="bars"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i></div><b>Normal</b><span>100Kbps – 700Kbps</span></div>
+      <div class="t2"><div class="bars"><i style="--i:5"></i><i style="--i:6"></i><i style="--i:7"></i><i style="--i:8"></i><i style="--i:9"></i></div><b>Middle</b><span>700Kbps – 1.9MBps</span></div>
+    </div>
+    <div class="live"><span class="dot"></span> Seva iko active sasa</div>
+  </div>
+</div></section>
+
+<section class="steps"><div class="wrap"><ol>
+  <li><span class="n">1</span><div><strong>Pakua app</strong><small>HTTP Custom, SSH Custom au HTTP Injector.</small></div></li>
+  <li><span class="n">2</span><div><strong>Lipia kifurushi</strong><small>Halo Pesa, Tigo Pesa au Airtel Money.</small></div></li>
+  <li><span class="n">3</span><div><strong>Tumia config</strong><small>Hujui jinsi? <a href="#" data-placeholder="youtube-link">Tazama video ya YouTube</a>.</small></div></li>
+</ol></div></section>
+
+<section class="pad" id="pakua" style="padding-bottom:0"><div class="wrap">
+  <div class="head"><h2>Pakua app</h2><p>Chagua app moja kati ya hizi tatu na uipakue kwenye Play Store.</p></div>
+  <div class="dls">
+    <a class="hc" href="https://play.google.com/store/apps/details?id=xyz.easypro.httpcustom" target="_blank" rel="noopener"><i class="fa-solid fa-circle-down" style="color:var(--amber);font-size:34px"></i><div><strong>HTTP Custom</strong><span>Pakua kwenye Play Store</span></div></a>
+    <a class="hc" href="https://play.google.com/store/apps/details?id=dev.epro.ssc" target="_blank" rel="noopener"><i class="fa-solid fa-circle-down" style="color:var(--amber);font-size:34px"></i><div><strong>SSH Custom</strong><span>Pakua kwenye Play Store</span></div></a>
+    <a class="hc" href="https://play.google.com/store/apps/details?id=com.evozi.injector" target="_blank" rel="noopener"><i class="fa-solid fa-circle-down" style="color:var(--amber);font-size:34px"></i><div><strong>HTTP Injector</strong><span>Pakua kwenye Play Store</span></div></a>
+  </div>
+</div></section>
+
+<section class="pad" id="vifurushi"><div class="wrap">
+  <div class="head"><h2>Vifurushi vya Halotel</h2><p>Vyote ni unlimited. Tofauti ni kasi na muda wa kutumia.</p></div>
+  <div class="plans" id="plans"></div>
+</div></section>
+
+<section class="pad" id="faq"><div class="wrap" style="max-width:760px">
+  <div class="head"><h2>Maswali ya mara kwa mara</h2></div>
+  <details><summary>Ni programu gani inafaa kutumia config hizi?</summary><p>Tumia <b>HTTP Custom</b>, <b>SSH Custom</b> au <b>HTTP Injector</b>. Unaweza kuzipakua kupitia sehemu ya "Pakua app" hapo juu.</p></details>
+  <details><summary>Nifanye nini nikipata matatizo?</summary><p>Wasiliana nasi moja kwa moja kupitia WhatsApp kwa namba +255 719 554 187, au tazama video ya maelekezo kwenye YouTube.</p></details>
+</div></section>
+
+<section class="pad alt" id="msaada"><div class="wrap">
+  <div class="head"><h2>Unahitaji msaada?</h2><p>Tupo tayari kukusaidia. Chagua njia unayopendelea.</p></div>
+  <div class="help">
+    <a class="hc wa" href="https://wa.me/255719554187?text=Habari%2C%20nahitaji%20msaada%20kuhusu%20visibleTech" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i><div><strong>WhatsApp</strong><span>+255 719 554 187</span></div></a>
+    <a class="hc yt" href="#" data-placeholder="youtube-link"><i class="fa-brands fa-youtube"></i><div><strong>Video ya maelekezo</strong><span>Jifunze kutumia config hatua kwa hatua</span></div></a>
+  </div>
+</div></section>
+</main>
+
+<footer class="site"><div class="wrap">
+  <span><strong style="color:#fff">visibleTech</strong> &copy; 2026. Haki zote zimehifadhiwa.</span>
+  <span style="display:flex;gap:22px">
+    <a href="https://wa.me/255719554187?text=Habari%2C%20nahitaji%20msaada%20kuhusu%20visibleTech"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+    <a href="#" data-placeholder="youtube-link"><i class="fa-brands fa-youtube"></i> YouTube</a>
+    <a href="#">Vigezo vya Matumizi</a>
+  </span>
+</div></footer>
+
+<!-- Payment modal -->
+<div id="payment-modal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="modal-product-title">
+ <div class="sheet">
+  <div class="mh"><div><small>Kukamilisha agizo</small><h3 id="modal-product-title">Config</h3></div><button class="x" onclick="closePaymentModal()" aria-label="Funga"><i class="fa-solid fa-xmark"></i></button></div>
+  <div class="mb">
+   <div id="payment-step-1">
+    <div class="total"><span>Jumla ya malipo</span><b id="modal-price-display">0/=</b></div>
+    <div id="paid-fields">
+      <label class="l" for="checkout-phone">Namba ya simu ya malipo</label>
+      <div class="ph"><span>+255</span><input type="tel" id="checkout-phone" inputmode="numeric" placeholder="712345678" autocomplete="tel-national"></div>
+      <p class="hint">Halotel, Tigo au Airtel. Vodacom (M-Pesa) haisupportiwi kwa sasa.</p>
+      <span class="l" style="display:block;font-weight:700;font-size:14px;margin-bottom:8px">Chagua mtandao wa malipo</span>
+      <div class="provs">
+        <label class="provider-card"><input type="radio" name="payment_provider" value="halopesa" checked><span class="radio-dot"></span>HALO PESA</label>
+        <label class="provider-card"><input type="radio" name="payment_provider" value="tigopesa"><span class="radio-dot"></span>TIGO PESA</label>
+        <label class="provider-card"><input type="radio" name="payment_provider" value="airtelmoney"><span class="radio-dot"></span>AIRTEL MONEY</label>
+      </div>
+    </div>
+    <button id="pay-btn" class="btn btn-blue" onclick="startPayment()"><i class="fa-solid fa-wallet"></i> <span id="pay-btn-label">Lipia na Upokee Config</span></button>
+   </div>
+
+   <div id="payment-step-loading" class="center hidden">
+    <div class="spin"></div><h4>Tunatuma ombi la malipo...</h4><p>Angalia simu yako sasa na uingize PIN ili kukamilisha malipo.</p>
+   </div>
+
+   <div id="payment-step-success" class="center hidden">
+    <i class="fa-solid fa-circle-check ok"></i><h4>Malipo yamekamilika!</h4><p>Asante kwa kuamini visibleTech. Config yako iko tayari.</p>
+    <div class="cfg"><span id="final-config-uri"></span><button onclick="copyFinalConfig()">Nakili</button></div>
+    <div class="two"><button class="btn btn-ghost" style="color:var(--ink);border-color:var(--line)" onclick="downloadConfigFile()"><i class="fa-solid fa-file-arrow-down"></i> Pakua faili</button><button class="btn btn-blue" onclick="closePaymentModal()">Kamilisha</button></div>
+    <a id="receipt-link" class="rc" href="#" target="_blank" rel="noopener">Hifadhi link hii ili kupata config yako tena</a>
+   </div>
+
+   <div id="payment-step-failed" class="center hidden">
+    <i class="fa-solid fa-circle-xmark bad"></i><h4>Haikufanikiwa</h4><p id="fail-message"></p>
+    <button class="btn btn-blue" style="width:100%;margin-top:18px" onclick="showPayStep('1')">Jaribu tena</button>
+   </div>
+  </div>
+ </div>
+</div>
+
+<div id="toast" role="status"><span id="toast-message"></span></div>
+
+<script>
+let pendingOrder=null,pollTimer=null,currentConfig='';
+const $=id=>document.getElementById(id);
+
+function openPaymentModal(label,price,speedType,duration,network){
+  const free=Number(price)===0;
+  pendingOrder={label,price,speedType,duration,network,free};
+  $('modal-product-title').textContent=label;
+  $('modal-price-display').textContent=free?'BURE':Number(price).toLocaleString('en-US')+'/=';
+  $('checkout-phone').value='';
+  $('paid-fields').style.display=free?'none':'';
+  $('pay-btn-label').textContent=free?'Pata Config Bure':'Lipia na Upokee Config';
+  showPayStep('1');
+  $('payment-modal').classList.remove('hidden');
+  if(!free)setTimeout(()=>$('checkout-phone').focus(),150);
+}
+function showPayStep(step){
+  ['1','loading','success','failed'].forEach(s=>$('payment-step-'+s).classList.toggle('hidden',s!==step));
+}
+function closePaymentModal(){
+  $('payment-modal').classList.add('hidden');
+  if(pollTimer){clearInterval(pollTimer);pollTimer=null;}
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePaymentModal();});
+$('checkout-phone').addEventListener('input',function(){this.value=this.value.replace(/\D/g,'').substring(0,12);});
+
+function normalizePhone(raw){
+  let p=(raw||'').replace(/\D/g,'');
+  if(p.startsWith('255')&&p.length===12)p='0'+p.substring(3);
+  if(p.length===9)p='0'+p;
+  return p;
+}
+
+async function startPayment(){
+  if(!pendingOrder)return;
+  const free=pendingOrder.free;
+  let phone='';
+  if(!free){
+    phone=normalizePhone($('checkout-phone').value);
+    if(phone.length!==10||!/^\d+$/.test(phone)||!phone.startsWith('0')){showToast('Ingiza namba sahihi ya tarakimu 10.');return;}
+    if(['074','075','076'].some(p=>phone.startsWith(p))){showToast('Vodacom (M-Pesa) haisupportiwi. Tumia Halotel, Tigo au Airtel.');return;}
+  }
+  showPayStep('loading');
+  try{
+    const res=await fetch('/api/buy-direct',{method:'POST',body:new URLSearchParams({
+      package:pendingOrder.label,speed_type:pendingOrder.speedType,duration:pendingOrder.duration,network:pendingOrder.network,phone:phone})});
+    const data=await res.json();
+    if(data.status==='success'){
+      $('receipt-link').href=data.redirect;
+      if(data.free){
+        currentConfig=data.config||'';
+        $('final-config-uri').textContent=currentConfig;
+        showPayStep('success');
+        showToast('Config yako ya bure iko tayari!');
+      }else startPolling(data.access_token);
+    }else showFailed(data.message||'Hitilafu. Jaribu tena.');
+  }catch(e){showFailed('Hitilafu ya mtandao. Jaribu tena.');}
+}
+
+function startPolling(token){
+  let attempts=0;
+  pollTimer=setInterval(async()=>{
+    if(++attempts>75){clearInterval(pollTimer);pollTimer=null;showFailed('Muda umeisha. Kama umelipa, fungua link ya risiti uliyotumiwa.');return;}
+    try{
+      const res=await fetch('/api/order/status/'+encodeURIComponent(token));
+      const data=await res.json();
+      if(data.payment_status==='success'){
+        clearInterval(pollTimer);pollTimer=null;
+        currentConfig=data.config||'';
+        $('final-config-uri').textContent=currentConfig;
+        showPayStep('success');showToast('Malipo yamekamilika!');
+      }else if(data.payment_status==='failed'){
+        clearInterval(pollTimer);pollTimer=null;
+        showFailed('Malipo hayakufanikiwa. Hakuna pesa iliyokatwa. Jaribu tena.');
+      }else if(data.payment_status==='no_stock'){
+        clearInterval(pollTimer);pollTimer=null;
+        showFailed('Malipo yamepokelewa lakini config haikupatikana. Wasiliana nasi kwa marejesho.');
+      }
+    }catch(e){}
+  },4000);
+}
+function showFailed(msg){$('fail-message').textContent=msg;showPayStep('failed');}
+
+function copyText(text){
+  const t=document.createElement('textarea');
+  t.value=text;document.body.appendChild(t);t.select();
+  try{document.execCommand('copy');}catch(e){}
+  if(navigator.clipboard)navigator.clipboard.writeText(text).catch(()=>{});
+  document.body.removeChild(t);
+}
+function copyFinalConfig(){copyText(currentConfig);showToast('Config imenakiliwa!');}
+function downloadConfigFile(){
+  const a=document.createElement('a');
+  a.download='visibleTech-Config.txt';
+  a.href=URL.createObjectURL(new Blob([currentConfig],{type:'text/plain'}));
+  a.style.display='none';document.body.appendChild(a);a.click();document.body.removeChild(a);
+  showToast('Faili ya config imeanza kupakuliwa!');
+}
+
+function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+let SITE={network:'halotel'};
+async function loadSite(){
+  try{SITE=await (await fetch('/api/site')).json();}catch(e){return;}
+  $('plans').innerHTML=SITE.plans.map(p=>'<article class="plan '+p.cls+'"><header><h3>'+esc(p.title)+'</h3><span>'+esc(p.range)+'</span></header>'+
+    p.rows.map(r=>'<div class="row'+(r.best?' best':'')+'"><div class="d">'+esc(r.label)+(r.best?'<span class="tag">Inapendekezwa</span>':'')+'<small>'+esc(r.small)+'</small></div><div class="p">'+(Number(r.price)?Number(r.price).toLocaleString('en-US')+'/=':'BURE')+'</div><button class="btn '+(r.best?'btn-amber':'btn-blue')+'" data-t="'+esc(p.id)+'" data-d="'+esc(r.d)+'" data-p="'+Number(r.price)+'" data-l="'+esc(p.title+' — '+r.label)+'">Lipia</button></div>').join('')+
+    '<footer><i class="fa-solid fa-circle-check"></i>'+esc(p.footer)+'</footer></article>').join('');
+  const wa='https://wa.me/'+SITE.whatsapp+'?text=Habari%2C%20nahitaji%20msaada%20kuhusu%20'+encodeURIComponent(SITE.name);
+  document.querySelectorAll('a[href^="https://wa.me/"]').forEach(a=>a.href=wa);
+  document.querySelectorAll('a[data-placeholder="youtube-link"]').forEach(a=>{if(SITE.youtube){a.href=SITE.youtube;a.target='_blank';a.rel='noopener';}});
+}
+document.addEventListener('click',e=>{const b=e.target.closest('button[data-t]');if(b)openPaymentModal(b.dataset.l,Number(b.dataset.p),b.dataset.t,b.dataset.d,SITE.network);});
+loadSite();
+let toastTimer;
+function showToast(msg){
+  $('toast-message').textContent=msg;
+  $('toast').classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>$('toast').classList.remove('show'),4000);
+}
+</script>
+</body>
+</html>
