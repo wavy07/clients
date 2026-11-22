@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#070D0A"><link rel="manifest" href="/manifest.webmanifest"><link rel="apple-touch-icon" href="/icon-192.png">
+<title>visibleTech – Online Cloud Config</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Unbounded:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{--bg:#F2F6F3;--card:#fff;--ink:#0F1A14;--mute:#58695F;--line:#DCE5DF;--g:#0B8A3E;--gold:#FCD116;--b:#0A7FB5;--dk:#0B1712;--pink:#E5484D;--ok:#0B8A3E;--bad:#C93036;--r:18px;--f:'Instrument Sans',system-ui,sans-serif;--d:'Unbounded','Instrument Sans',sans-serif}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth;scroll-padding-top:90px}
+body{font:16px/1.6 var(--f);background:var(--bg);color:var(--ink);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--d);line-height:1.15;letter-spacing:-.02em;font-weight:700}
+a{color:inherit}.hidden{display:none!important}.mute{color:var(--mute)}
+.wrap{max-width:1100px;margin:0 auto;padding:0 20px}
+:focus-visible{outline:3px solid var(--b);outline-offset:2px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;font:700 15px var(--f);padding:12px 20px;border-radius:12px;border:1.5px solid transparent;cursor:pointer;text-decoration:none;color:#fff;transition:background .15s,transform .1s,border-color .15s}
+.btn:active{transform:scale(.97)}.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-pri{background:var(--g)}.btn-pri:hover:not(:disabled){background:#087535}
+.btn-gold{background:var(--gold);color:#1b1500}
+.btn-ghost{background:var(--card);border-color:var(--line);color:var(--ink)}.btn-ghost:hover{border-color:var(--ink)}
+.btn.sm{padding:8px 14px;font-size:14px;border-radius:10px}
+/* banners */
+.strip{position:relative;z-index:41;display:flex;align-items:center;justify-content:center;gap:12px;padding:9px 14px;font-weight:700;font-size:14px;text-align:center;flex-wrap:wrap}
+.cc-gold{background:linear-gradient(90deg,#FFB21E,#FFD66B,#FFB21E);background-size:200% 100%;animation:slide 6s linear infinite;color:#1b1200}
+.cc-red{background:linear-gradient(90deg,#E11D48,#FB7185,#E11D48);background-size:200% 100%;animation:slide 6s linear infinite;color:#fff}
+.cc-black{background:linear-gradient(90deg,#000,#26211a,#000);background-size:200% 100%;animation:slide 7s linear infinite;color:#FFC23D;box-shadow:inset 0 0 0 1px #3a3022}
+.cc-green{background:linear-gradient(90deg,#059669,#34D399,#059669);background-size:200% 100%;animation:slide 6s linear infinite;color:#052e1f}
+.cc-blue{background:linear-gradient(90deg,#2563EB,#22D3EE,#2563EB);background-size:200% 100%;animation:slide 6s linear infinite;color:#fff}
+.cc-pink{background:linear-gradient(90deg,#DB2777,#FF8AC0,#DB2777);background-size:200% 100%;animation:slide 6s linear infinite;color:#fff}
+@keyframes slide{to{background-position:-200% 0}}
+.code{display:inline-flex;align-items:center;gap:6px;border:1.5px dashed currentColor;border-radius:9px;padding:1px 10px;font:800 13px ui-monospace,Menlo,monospace;letter-spacing:.06em;cursor:pointer;background:rgba(255,255,255,.14);color:inherit}
+.hb{position:relative;overflow:hidden;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:22px 26px;border-radius:22px;margin:0 0 14px;box-shadow:0 18px 50px rgba(0,0,0,.35)}
+.hb h3{font-size:clamp(22px,3.6vw,32px)}.hb p{opacity:.9;font-weight:600}.hb .code{font-size:17px;padding:6px 14px}
+.hang{position:fixed;top:78px;z-index:35;width:132px;transform-origin:50% 0;animation:swing 3.2s ease-in-out infinite;text-align:center}
+.hang::before{content:"";display:block;width:2px;height:36px;background:linear-gradient(#e2e8f0,#94a3b8);margin:0 auto}
+.hang .tag{position:relative;padding:16px 10px 12px;border-radius:16px;box-shadow:0 16px 34px rgba(0,0,0,.5);cursor:pointer;font-weight:800;line-height:1.2;font-size:14px}
+.hang .tag::before{content:"";position:absolute;top:6px;left:50%;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:var(--bg);box-shadow:inset 0 0 0 2px rgba(255,255,255,.5)}
+.hang small{display:block;font-weight:600;opacity:.85;margin-top:4px}.hang .x{position:absolute;top:34px;right:-6px;width:22px;height:22px;border-radius:50%;border:0;background:#000a;color:#fff;cursor:pointer;font-size:11px}
+@keyframes swing{0%,100%{transform:rotate(6deg)}50%{transform:rotate(-6deg)}}
+.cc-custom{background-size:auto}.noanim,.noanim *{animation:none!important}
+.bimg{height:30px;width:auto;max-width:120px;object-fit:contain;border-radius:6px;flex:none}.hb .bimg{height:64px;max-width:160px;border-radius:12px}.hang .bimg{height:38px;margin:0 auto 6px;display:block}.pop-img{max-height:150px;max-width:70%;object-fit:contain;margin:0 auto 12px;display:block;border-radius:12px}
+.bbtn{display:inline-flex;align-items:center;padding:5px 14px;border-radius:99px;border:1.5px solid currentColor;background:rgba(0,0,0,.18);color:inherit;font:800 13px Figtree,sans-serif;text-decoration:none;white-space:nowrap}.bbtn:hover{background:rgba(0,0,0,.32)}
+.bx{width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.28);color:inherit;cursor:pointer;font-size:11px;flex:none}
+.hb .bx{position:absolute;top:10px;right:10px}.hang .bx{position:absolute;top:34px;right:-6px;width:22px;height:22px;background:#000a;color:#fff}
+#page-banners:not(:empty){padding-top:18px}
+.top{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:10px;min-height:64px;padding-top:8px;padding-bottom:8px}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;font:700 19px var(--d);letter-spacing:-.04em;margin-right:auto}.logo b{color:var(--g)}
+.ib,.menu-btn{position:relative;flex:none;width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;font-size:16px;transition:border-color .15s}
+.ib:hover,.menu-btn:hover{border-color:var(--ink)}
+.ib .bd{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:99px;background:var(--pink);color:#fff;font:800 11px/20px var(--f);text-align:center}
+.menu-btn{display:grid;place-content:center;gap:5px}.menu-btn i{display:block;width:20px;height:2.5px;border-radius:3px;background:var(--ink)}
+@media(max-width:760px){.hang{top:84px;width:108px}.hang .tag{font-size:12px}}
+.hero{padding:22px 0 10px}
+.panel{display:grid;grid-template-columns:1.1fr .9fr;gap:28px;align-items:center;background:var(--dk);color:#fff;border-radius:28px;padding:44px 40px}
+.panel>*{animation:up .7s cubic-bezier(.2,.8,.2,1) both}.panel>*:nth-child(2){animation-delay:.12s}
+@keyframes up{from{opacity:0;transform:translateY(16px)}}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:99px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);font-size:13px;font-weight:700;color:#cfe0d6;margin-bottom:18px}
+.dot{width:9px;height:9px;border-radius:50%;background:#3DDC84;box-shadow:0 0 0 0 #3DDC84;animation:ping 1.8s infinite}@keyframes ping{70%{box-shadow:0 0 0 10px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.panel h1{font-size:clamp(30px,5.2vw,50px);margin-bottom:14px}
+.lead{font-size:17px;color:#b9cbc0;max-width:480px;margin-bottom:24px}.cta{display:flex;gap:12px;flex-wrap:wrap}
+.panel .btn-ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.35)}.panel .btn-ghost:hover{border-color:#fff}
+.vis{position:relative;height:300px;border-radius:22px;overflow:hidden;display:grid;place-items:center;background:linear-gradient(135deg,#0B8A3E 0 33%,#FCD116 33% 38%,#0A0F0C 38% 62%,#FCD116 62% 67%,#0A7FB5 67% 100%)}
+.core{width:92px;height:92px;border-radius:24px;background:#fff;display:grid;place-items:center;box-shadow:0 14px 34px rgba(0,0,0,.35)}
+.fl{position:absolute;display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:99px;background:#fff;color:var(--ink);font-weight:700;font-size:14px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.fl i{color:var(--g)}.f1{top:22px;left:18px}.f2{top:52%;right:16px}.f3{bottom:22px;left:22px}
+@media(max-width:860px){.panel{grid-template-columns:1fr;padding:30px 22px}.vis{height:220px}}
+.pad{padding:60px 0}.head{margin-bottom:26px}.head h2{font-size:clamp(24px,3.6vw,34px);margin-bottom:8px}.head p{color:var(--mute);max-width:600px}
+.glass{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 1px 2px rgba(15,26,20,.05);transition:border-color .2s}
+.glass:hover{border-color:#b4c6ba}
+.steps ol{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.steps li{display:flex;gap:14px;align-items:flex-start;padding:20px}.steps .n{flex:none;width:40px;height:40px;border-radius:50%;background:var(--dk);color:var(--gold);display:grid;place-items:center;font:700 16px var(--d)}
+.steps small{display:block;color:var(--mute)}.steps a{color:var(--b);font-weight:600}
+.dls,.help{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.hc{display:flex;gap:14px;align-items:center;padding:18px;text-decoration:none}.hc i{font-size:32px}.hc strong{display:block}.hc span{color:var(--mute);font-size:14px}
+.hc.wa i{color:#1DA851}.hc.yt i{color:#E62117}.hc .fa-circle-down{color:var(--b)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px}
+.offer{position:relative;padding:22px;display:flex;flex-direction:column;gap:10px}
+.offer .ico{width:46px;height:46px;border-radius:13px;background:var(--dk);color:var(--gold);display:grid;place-items:center;font-size:20px}
+.offer h3{font-size:18px}.desc{color:var(--mute);white-space:pre-line;flex:1;font-size:15px}
+.stk{position:absolute;top:20px;right:20px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px}.stk.ok{background:#E3F5EA;color:var(--g)}.stk.no{background:#FCE8E9;color:var(--bad)}
+.foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px}.pr{font:700 19px var(--d)}.pr small{font:600 13px var(--f);color:var(--mute)}
+.nets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}.nets button{border:1px solid var(--line);background:var(--card);color:var(--mute);padding:9px 18px;border-radius:99px;font:700 14px var(--f);cursor:pointer}.nets button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px}
+.plan{--ac:var(--b);overflow:hidden;border-top:4px solid var(--ac)}.plan.nor{--ac:#8793A0}.plan.gld{--ac:#E5B800}.plan.grn{--ac:var(--g)}.plan.mid{--ac:var(--b)}
+.plan header{padding:20px 22px 10px}.plan header h3{font-size:19px}.plan header span{color:var(--mute);font-weight:600;font-size:14px}
+.row{display:flex;align-items:center;gap:12px;padding:14px 22px;border-top:1px solid var(--line)}.row.best{background:#FFF8D6}
+.row .d{flex:1}.row .d small{display:block;color:var(--mute);font-size:13px}.row .p{font:700 15px var(--d)}
+.row .tag{margin-left:8px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--gold);color:#1b1500;vertical-align:middle}
+.plan footer{padding:14px 22px;border-top:1px solid var(--line);color:var(--mute);font-size:13px}.plan footer i{color:var(--g);margin-right:6px}
+.mine{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px}
+.cfgc{padding:18px;display:flex;flex-direction:column;gap:10px}.cfgc .t{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.cfgc .t small{color:var(--mute);display:block}
+pre.code2{background:var(--dk);border-radius:12px;padding:12px;font:13px/1.45 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-all;max-height:130px;overflow:auto;color:#bdf5d0}
+.two{display:flex;gap:10px}.two .btn{flex:1}
+details{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin-bottom:12px}details[open]{border-color:var(--g)}summary{cursor:pointer;font-weight:700}details p{margin-top:10px;color:var(--mute)}
+footer.site{border-top:1px solid var(--line);padding:28px 0;color:var(--mute);font-size:14px}footer.site .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}footer.site a{text-decoration:none}
+.modal{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(11,23,18,.62);backdrop-filter:blur(4px);animation:fade .2s}@keyframes fade{from{opacity:0}}
+.sheet{width:100%;max-width:470px;max-height:92vh;overflow:auto;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(0,0,0,.35);animation:pop .3s cubic-bezier(.2,1.2,.3,1)}@keyframes pop{from{opacity:0;transform:translateY(24px) scale(.96)}}
+.mh{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 22px;border-bottom:1px solid var(--line)}.mh small{color:var(--mute)}.mh h3{font-size:18px}
+.x{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}.mb{padding:20px 22px}
+.total{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-radius:12px;background:#EAF6EE;margin-bottom:16px}.total b{font:700 20px var(--d)}.total s{color:var(--mute);margin-right:8px;font-size:15px}
+label.l{display:block;font-weight:700;font-size:14px;margin-bottom:6px}
+.ph{display:flex;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;margin-bottom:6px}.ph span{padding:12px 14px;background:var(--bg);font-weight:700}
+input.in,.ph input{flex:1;width:100%;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--ink);font:inherit}.ph input{border:0;border-radius:0}input.in:focus,.ph input:focus{outline:0;border-color:var(--g)}
+.hint{font-size:13px;color:var(--mute);margin-bottom:14px}
+.cp{display:flex;gap:8px;margin:0 0 4px}.cpm{font-size:13px;min-height:20px;margin-bottom:12px}.cpm.ok{color:var(--ok)}.cpm.no{color:var(--bad)}
+.provs{display:grid;gap:8px;margin-bottom:16px}.provider-card{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;cursor:pointer;font-weight:700;font-size:14px}.provider-card:has(input:checked){border-color:var(--g);background:#EAF6EE}.provider-card input{accent-color:var(--g)}
+#pay-btn{width:100%}
+.center{text-align:center;padding:10px 0}.center i.big{font-size:56px;margin-bottom:10px}.ok{color:var(--ok)}.bad{color:var(--bad)}.center p{color:var(--mute)}
+.spin{width:50px;height:50px;border-radius:50%;border:5px solid var(--line);border-top-color:var(--g);margin:0 auto 14px;animation:spin .9s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.cfg{display:flex;gap:8px;align-items:center;margin:16px 0;padding:10px;border-radius:12px;background:var(--dk);text-align:left}.cfg span{flex:1;font:12px ui-monospace,Menlo,monospace;word-break:break-all;max-height:90px;overflow:auto;color:#bdf5d0}.cfg button{border:0;border-radius:9px;padding:8px 12px;background:var(--gold);color:#1b1500;font-weight:700;cursor:pointer}
+.nt{display:flex;gap:12px;padding:14px;border-radius:14px;margin-bottom:10px;background:var(--card);border:1px solid var(--line)}.nt.un{border-color:var(--g);background:#F1FAF4}
+.nt .ni{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--bg)}.nt.paid .ni{color:var(--ok)}.nt.issue .ni{color:var(--bad)}.nt.pending .ni{color:#B38F00}.nt.info .ni{color:var(--b)}
+.nt b{display:block}.nt p{color:var(--mute);font-size:14px}.nt small{color:#84978B}
+.nt .del{flex:none;width:34px;height:34px;color:var(--mute);background:transparent;border:0}.nt .del:hover,.btn-del:hover{color:var(--bad)}
+.ord{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}.ord small{display:block;color:var(--mute)}.ord a{color:var(--b);white-space:nowrap}
+#toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,120px);z-index:100;background:var(--dk);color:#fff;padding:12px 20px;border-radius:14px;font-weight:600;transition:transform .3s cubic-bezier(.2,1.2,.3,1);max-width:90vw;text-align:center}#toast.show{transform:translate(-50%,0)}
+.page{animation:fade .25s}
+.gh{display:flex;align-items:center;gap:10px;margin:26px 0 12px;flex-wrap:wrap}.gh:first-child{margin-top:4px}.gh h3{font-size:17px}.gh span{color:var(--mute);font-size:14px;margin-right:auto}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.drawer{position:fixed;inset:0;z-index:90;visibility:hidden;pointer-events:none}.drawer.open{visibility:visible;pointer-events:auto}
+.dv{position:absolute;inset:0;background:rgba(11,23,18,.6);backdrop-filter:blur(4px);opacity:0;transition:opacity .25s}.drawer.open .dv{opacity:1}
+.dp{position:absolute;top:0;left:0;bottom:0;width:min(320px,86vw);background:#fff;box-shadow:20px 0 60px rgba(0,0,0,.25);transform:translateX(-100%);transition:transform .28s cubic-bezier(.2,.9,.3,1);display:flex;flex-direction:column;padding:18px 14px calc(18px + env(safe-area-inset-bottom))}
+.drawer.open .dp{transform:none}
+.dh{display:flex;align-items:center;justify-content:space-between;padding:0 6px 14px;margin-bottom:8px;border-bottom:1px solid var(--line)}
+.dp a.mi,.dp button.mi{display:flex;align-items:center;gap:14px;width:100%;padding:13px 14px;margin-bottom:4px;border-radius:12px;border:0;background:none;color:var(--ink);font:600 16px var(--f);text-decoration:none;cursor:pointer;text-align:left}
+.dp .mi:hover{background:var(--bg)}.dp a.mi.on{background:var(--dk);color:#fff}
+.mi .ic{flex:none;width:26px;text-align:center;font-size:18px}.mi .mb2{margin-left:auto;min-width:22px;height:22px;padding:0 6px;border-radius:99px;background:var(--pink);font:800 12px/22px var(--f);text-align:center;color:#fff}
+.dp .sp{flex:1}.dp .sep{height:1px;background:var(--line);margin:8px 0}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+/* ===== DARK THEME + MOTION ===== */
+:root{--bg:#070D0A;--card:rgba(255,255,255,.055);--ink:#EAF3EC;--mute:#97ABA0;--line:rgba(255,255,255,.11);--dk:#04080600;--gl:#3DDC84;--b:#45B8EE}
+html{color-scheme:dark}
+.aurora{position:fixed;inset:0;z-index:-1;overflow:hidden}
+.aurora i{position:absolute;border-radius:50%;filter:blur(100px);opacity:.38;animation:drift 18s ease-in-out infinite alternate}
+.aurora i:nth-child(1){width:520px;height:520px;background:#0B8A3E;top:-150px;left:-120px}
+.aurora i:nth-child(2){width:460px;height:460px;background:#0A7FB5;right:-140px;top:24%;animation-delay:-6s}
+.aurora i:nth-child(3){width:400px;height:400px;background:#FCD116;left:32%;bottom:-200px;opacity:.16;animation-delay:-12s}
+@keyframes drift{to{transform:translate(70px,45px) scale(1.18)}}
+.top{background:rgba(7,13,10,.72)}
+.panel{background:rgba(255,255,255,.04);border:1px solid var(--line);backdrop-filter:blur(10px)}
+.vis{background-size:200% 200%;animation:band 14s ease-in-out infinite alternate}
+@keyframes band{to{background-position:100% 100%}}
+.core{animation:beat 2.6s ease-in-out infinite}@keyframes beat{50%{transform:scale(1.08);box-shadow:0 0 70px rgba(61,220,132,.55)}}
+.fl{animation:bob 5s ease-in-out infinite}.f2{animation-delay:-1.6s}.f3{animation-delay:-3.2s}@keyframes bob{50%{transform:translateY(-12px)}}
+.btn-pri,.btn-gold{position:relative;overflow:hidden}
+.btn-pri::after,.btn-gold::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-20deg);animation:shine 3.6s ease-in-out infinite}
+@keyframes shine{0%,55%{left:-60%}100%{left:130%}}
+.rv{opacity:0;transform:translateY(24px);transition:opacity .7s cubic-bezier(.2,.8,.2,1),transform .7s cubic-bezier(.2,.8,.2,1),border-color .2s,box-shadow .3s}.rv.in{opacity:1;transform:none}
+.glass:hover{transform:translateY(-4px);border-color:rgba(61,220,132,.5);box-shadow:0 18px 44px rgba(0,0,0,.45)}.glass.in:hover{transform:translateY(-4px)}
+.offer:hover .ico{animation:wob .6s}@keyframes wob{30%{transform:rotate(-12deg) scale(1.1)}60%{transform:rotate(8deg)}}
+.ib .bd{animation:pulse 1.8s infinite}@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(229,72,77,.6)}100%{box-shadow:0 0 0 12px rgba(229,72,77,0)}}
+.steps .n{background:var(--gold);color:#1b1500}
+.steps a,.rc,.ord a{color:var(--b)}.hc .fa-circle-down{color:var(--gl)}
+.stk.ok{background:rgba(61,220,132,.14);color:var(--gl)}.stk.no{background:rgba(229,72,77,.15);color:#ff7b80}
+.nets button.on{background:var(--gl);color:#04100a;border-color:var(--gl)}
+.row.best{background:rgba(252,209,22,.09)}.row:hover{background:rgba(255,255,255,.04)}
+.plan footer i{color:var(--gl)}details[open]{border-color:rgba(61,220,132,.55)}
+.sheet,.dp{background:#0E1813;border:1px solid var(--line)}
+.total{background:rgba(61,220,132,.12)}
+input.in,.ph input,.ph{background:rgba(0,0,0,.35);color:var(--ink)}.ph span,.x{background:rgba(255,255,255,.07);color:var(--ink)}
+input.in:focus,.ph input:focus{border-color:var(--gl)}
+.provider-card:has(input:checked){border-color:var(--gl);background:rgba(61,220,132,.1)}
+.nt.un{border-color:rgba(61,220,132,.6);background:rgba(61,220,132,.08)}.nt .ni{background:rgba(255,255,255,.08)}
+.dp .mi:hover{background:rgba(255,255,255,.07)}.dp a.mi.on{background:var(--g);color:#fff}
+.btn-ghost:hover{border-color:var(--gl)}.menu-btn i{background:var(--ink)}
+.spin{border-color:rgba(255,255,255,.12);border-top-color:var(--gl)}.cfg{background:rgba(0,0,0,.45);border:1px solid var(--line)}
+.logo b{color:var(--gl)}pre.code2{background:rgba(0,0,0,.45);border:1px solid var(--line)}
+#toast{background:#16241C;border:1px solid var(--line)}.ok{color:var(--gl)}
+@media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none}}
+.fl{color:#0F1A14}.qr{display:block;width:100%;max-width:230px;margin:6px auto;border-radius:12px;background:#fff;padding:10px}.isimg .cfg span{max-height:none;text-align:center}.cfgc.isimg .btn-pri,#payment-step-success.isimg .cfg button{display:none}
+</style>
+<style>
+.esb{display:flex;flex-direction:column;gap:8px;text-align:left}
+.esr{background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.esr small{color:var(--mute);font-weight:600}
+.esr code{font:13px/1.45 ui-monospace,Menlo,monospace;word-break:break-all;color:#bdf5d0;max-height:84px;overflow:auto;display:block}
+.esr .btn{align-self:flex-start}
+.esa{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+#pwa-bar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:70;max-width:520px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:rgba(11,23,18,.97);color:#EAF3EC;border:1px solid rgba(255,255,255,.14);box-shadow:0 14px 40px rgba(0,0,0,.45);animation:pwaup .5s cubic-bezier(.2,.9,.3,1)}
+#pwa-bar img{border-radius:12px;flex:none}#pwa-bar .pt{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3}#pwa-bar .pt b{font-size:15px}#pwa-bar .pt span{font-size:12.5px;color:#97ABA0}
+#pwa-x{background:none;border:0;color:#97ABA0;font-size:20px;line-height:1;cursor:pointer;padding:6px;flex:none}
+@keyframes pwaup{from{opacity:0;transform:translateY(24px)}}@media(prefers-reduced-motion:reduce){#pwa-bar{animation:none}}
+#payment-step-success.isimg .cfg .esb button,#payment-step-success.isimg .cfg .esb .btn{display:inline-flex}
+</style><style id="prem-css">
+body.prem{--bg:#0A0805;--g:#C9971C;--gold:#F5C451;--gl:#F5C451;--ink:#FFF4DC;--mute:#B8A77F;--line:rgba(245,196,81,.22);--card:rgba(255,214,120,.06)}
+body.prem .btn-pri{background:linear-gradient(135deg,#F5C451,#B8860B);color:#1b1200}body.prem .btn-pri:hover:not(:disabled){background:linear-gradient(135deg,#FFD978,#C9971C)}
+body.prem .aurora i{background:#C9971C!important}body.prem .aurora i:nth-child(2){background:#7A4E00!important}body.prem .aurora i:nth-child(3){background:#F5C451!important;opacity:.22}
+body.prem .top{border-bottom:1px solid rgba(245,196,81,.28)}body.prem .plan,body.prem .offer{border-color:rgba(245,196,81,.26)}
+body.prem .logo span::after{content:" PREMIUM";font:700 10px var(--f);letter-spacing:.12em;color:#1b1200;background:linear-gradient(135deg,#F5C451,#B8860B);padding:2px 7px;border-radius:99px;margin-left:6px;vertical-align:middle}
+.pm-hero{text-align:center;padding:30px 20px;border-radius:24px;border:1px solid rgba(245,196,81,.35)!important;background:linear-gradient(160deg,rgba(245,196,81,.16),rgba(0,0,0,.2))}
+.pm-crown{font-size:54px;filter:drop-shadow(0 6px 18px rgba(245,196,81,.5));animation:pmf 3s ease-in-out infinite alternate}@keyframes pmf{to{transform:translateY(-6px) rotate(-4deg)}}
+.pm-hero h2{font:700 30px var(--d);letter-spacing:-.04em;background:linear-gradient(90deg,#FFD978,#C9971C);-webkit-background-clip:text;background-clip:text;color:transparent;margin:6px 0}
+.pm-perks{list-style:none;padding:0;margin:16px auto 0;display:grid;gap:8px;text-align:left;max-width:460px}.pm-perks li{display:flex;gap:10px;align-items:center}.pm-perks i{color:#F5C451}
+.pm-plans{display:grid;gap:10px}.pm-plan{display:flex;align-items:center;gap:12px;padding:16px;border-radius:16px;border:1px solid rgba(245,196,81,.3);background:rgba(245,196,81,.07)}.pm-plan small{display:block;color:var(--mute)}.pm-plan .pr{margin-left:auto;font:700 18px var(--d)}
+.pm-lock{display:flex;align-items:center;gap:12px;padding:16px;border-radius:16px;margin-top:14px;border:1px dashed rgba(245,196,81,.55)!important;color:inherit;text-decoration:none}.pm-lock span{font-size:28px}.pm-lock small{display:block;color:var(--mute)}.pm-lock i{margin-left:auto}
+.pm-acct{padding:12px 14px;border-radius:14px;border:1px solid rgba(245,196,81,.4);background:rgba(245,196,81,.08);display:flex;justify-content:space-between;gap:8px;align-items:center}
+@media(prefers-reduced-motion:reduce){.pm-crown{animation:none}}
+</style>
+</head>
+<body>
+<div class="aurora"><i></i><i></i><i></i></div>
+<div id="strips"></div>
+<div class="top"><div class="wrap">
+  <button class="menu-btn" id="menu-btn" onclick="openMenu()" aria-label="Menyu" aria-expanded="false"><i></i><i></i><i></i></button>
+  <a class="logo" href="#/home" aria-label="visibleTech"><svg width="28" height="28" viewBox="0 0 30 30" aria-hidden="true"><rect x="2" y="18" width="6" height="10" rx="1.5" fill="#0B8A3E"/><rect x="12" y="11" width="6" height="17" rx="1.5" fill="#FCD116"/><rect x="22" y="3" width="6" height="25" rx="1.5" fill="#0A7FB5"/></svg><span>visible<b>Tech</b></span></a>
+  <button class="ib" id="bell" onclick="location.hash='#/notifs'" aria-label="Notification"><i class="fa-solid fa-bell"></i><span class="bd hidden" id="bell-n">0</span></button>
+  <button class="btn btn-ghost sm" id="acct-btn" onclick="openAcct()">Akaunti</button>
+</div></div>
+
+<div class="drawer" id="drawer" aria-hidden="true">
+  <div class="dv" onclick="closeMenu()"></div>
+  <nav class="dp" aria-label="Menyu kuu">
+    <div class="dh"><div class="logo" style="margin:0"><span>visible<b>Tech</b></span></div><button class="x" onclick="closeMenu()" aria-label="Funga menyu"><i class="fa-solid fa-xmark"></i></button></div>
+    <a class="mi" href="#/home" data-p="home"><span class="ic">🏠</span>Nyumbani</a>
+    <a class="mi" href="#/offers" data-p="offers"><span class="ic">🔥</span>Ofa</a>
+    <a class="mi" href="#/packages" data-p="packages"><span class="ic">📦</span>Vifurushi</a>
+    <a class="mi pmi" href="#/premium" data-p="premium"><span class="ic">👑</span>Premium</a>
+    <a class="mi" href="#/esim" data-p="esim"><span class="ic">📶</span>eSIM</a>
+    <a class="mi" href="#/configs" data-p="configs"><span class="ic">🔑</span>Config Zangu</a>
+    <a class="mi" href="#/notifs" data-p="notifs"><span class="ic">🔔</span>Notification<span class="mb2 hidden" id="menu-nt-n">0</span></a>
+    <a class="mi" href="#/help" data-p="help"><span class="ic">💬</span>Msaada</a>
+    <div class="sp"></div><div class="sep"></div>
+    <button class="mi" onclick="closeMenu();openAcct()"><span class="ic"><i class="fa-regular fa-user"></i></span>Akaunti Yangu</button>
+    <button class="mi" onclick="doLogout()"><span class="ic"><i class="fa-solid fa-right-from-bracket"></i></span>Toka</button>
+  </nav>
+</div>
+
+<main id="top">
+<div class="wrap" id="page-banners"></div>
+<div class="page" data-page="home"><section class="hero"><div class="wrap"><div class="panel">
+  <div>
+    <span class="pill"><span class="dot"></span> Server iko online <span id="hello"></span></span>
+    <h1 id="hero-title">Intaneti isiyo na kikomo.</h1>
+    <p class="lead">Chagua ofa au kifurushi, lipa kwa simu, na config yako inakufikia papo hapo. Kila config unayonunua inahifadhiwa kwenye akaunti yako.</p>
+    <div class="cta">
+      <a class="btn btn-gold" href="#/offers"><i class="fa-solid fa-bolt"></i> Angalia Ofa</a>
+      <a class="btn btn-ghost" href="#/configs"><i class="fa-solid fa-key"></i> Config Zangu</a>
+    </div>
+  </div>
+  <div class="vis" aria-hidden="true">
+    <div class="core"><svg width="54" height="54" viewBox="0 0 30 30"><rect x="2" y="18" width="6" height="10" rx="1.5" fill="#0B8A3E"/><rect x="12" y="11" width="6" height="17" rx="1.5" fill="#E5B800"/><rect x="22" y="3" width="6" height="25" rx="1.5" fill="#0A7FB5"/></svg></div>
+    <span class="fl f1"><i class="fa-solid fa-bolt"></i> Papo hapo</span><span class="fl f2"><i class="fa-solid fa-shield-halved"></i> Salama</span><span class="fl f3"><i class="fa-solid fa-infinity"></i> Bila kikomo</span>
+  </div>
+</div></div></section>
+<section class="steps"><div class="wrap"><ol>
+  <li class="glass rv"><span class="n">1</span><div><strong>Pakua App</strong><small>HTTP Custom, SSH Custom, HTTP Injector au NPV Tunnel.</small></div></li>
+  <li class="glass rv"><span class="n">2</span><div><strong>Lipa ofa / kifurushi</strong><small>M-Pesa, Halo Pesa, Tigo Pesa au Airtel Money.</small></div></li>
+  <li class="glass rv"><span class="n">3</span><div><strong>Tumia config yako</strong><small>Hujui jinsi? <a href="#" data-placeholder="youtube-link">Tazama video ya YouTube</a>.</small></div></li>
+</ol></div></section>
+<section class="pad" id="pakua" style="padding-top:44px"><div class="wrap">
+  <div class="head rv"><h2>Pakua App</h2><p>Chagua mojawapo ya App hizi nne na uipakue kutoka Play Store.</p></div>
+  <div class="dls">
+    <a class="hc glass rv" href="https://play.google.com/store/apps/details?id=xyz.easypro.httpcustom" target="_blank" rel="noopener"><i class="fa-solid fa-circle-down"></i><div><strong>HTTP Custom</strong><span>Pakua kwenye Play Store</span></div></a>
+    <a class="hc glass rv" href="https://play.google.com/store/apps/details?id=dev.epro.ssc" target="_blank" rel="noopener"><i class="fa-solid fa-circle-down"></i><div><strong>SSH Custom</strong><span>Pakua kwenye Play Store</span></div></a>
+    <a class="hc glass rv" href="https://play.google.com/store/apps/details?id=com.evozi.injector" target="_blank" rel="noopener"><i class="fa-solid fa-circle-down"></i><div><strong>HTTP Injector</strong><span>Pakua kwenye Play Store</span></div></a>
+    <a class="hc glass rv" href="https://play.google.com/store/apps/details?id=com.napsternetlabs.napsternetv" target="_blank" rel="noopener"><i class="fa-solid fa-circle-down"></i><div><strong>NPV Tunnel</strong><span>Pakua kwenye Play Store</span></div></a>
+  </div>
+</div></section></div>
+<div class="page hidden" data-page="offers"><section class="pad" id="offers"><div class="wrap">
+  <div class="head rv"><h2>🔥 Ofa</h2><p>Config na VPN files zilizoandaliwa maalum — BURE kabisa, pakua bila malipo. Soma maelezo ya kila ofa kabla ya kupakua.</p></div>
+  <div class="grid" id="offer-list"></div>
+</div></section></div>
+<div class="page hidden" data-page="esim"><section class="pad" id="esim"><div class="wrap">
+  <div class="head rv"><h2>📶 eSIM</h2><p>Nunua eSIM yako, lipa kwa simu na uipokee papo hapo kama QR code, link au activation code. Soma maelezo ya kila aina kabla ya kununua.</p></div>
+  <div class="grid" id="esim-list"></div>
+  <div id="esim-mine-wrap" class="hidden" style="margin-top:34px"><div class="head"><h2>📥 eSIM Zangu</h2><p>eSIM ulizonunua: QR code, link na activation code. Nakili, pakua au futa za zamani.</p></div><div class="mine" id="esim-mine"></div></div>
+</div></section></div>
+<div class="page hidden" data-page="packages"><section class="pad" id="vifurushi" style="padding-top:30px"><div class="wrap">
+  <div class="head rv"><h2 id="pk-title">Vifurushi</h2><p>Vifurushi vyote havina kikomo. Vinatofautiana kwa speed na muda.</p></div>
+  <div class="nets" id="nets"></div>
+  <div class="plans" id="plans"></div>
+</div></section></div>
+<div class="page hidden" data-page="premium"><section class="pad" style="padding-top:30px"><div class="wrap" style="max-width:780px">
+  <div class="pm-hero glass"><div class="pm-crown">👑</div><h2 id="pm-title">Premium</h2><p id="pm-status" class="mute"></p><ul id="pm-perks" class="pm-perks"></ul></div>
+  <h3 id="pm-h" style="margin:22px 0 10px">Chagua muda wa Premium</h3><div id="pm-plans" class="pm-plans"></div>
+</div></section></div>
+<div class="page hidden" data-page="configs"><section class="pad" id="mine" style="padding-top:30px"><div class="wrap">
+  <div class="head rv"><h2>🔑 Config Zangu</h2><p>Config ulizonunua, zimepangwa kwa aina. Nakili, pakua, au futa za zamani.</p></div>
+  <div class="nets" id="cfg-chips"></div>
+  <div id="mine-list"></div>
+</div></section></div>
+<div class="page hidden" data-page="notifs"><section class="pad" id="notifs" style="padding-top:30px"><div class="wrap" style="max-width:780px">
+  <div class="head rv"><h2>🔔 Notification</h2><p>Taarifa za malipo na ujumbe kutoka kwetu. Unaweza kufuta usizozihitaji.</p></div>
+  <div class="toolbar"><span class="mute" id="nt-count"></span><button class="btn btn-ghost sm btn-del hidden" id="nt-clear" onclick="delAllNotifs()"><i class="fa-regular fa-trash-can"></i> Futa zote</button></div>
+  <div id="nt-list"></div>
+</div></section></div>
+<div class="page hidden" data-page="help"><section class="pad" id="faq" style="padding-top:30px"><div class="wrap" style="max-width:780px">
+  <div class="head rv"><h2>Maswali yanayoulizwa mara nyingi</h2></div>
+  <details class="rv"><summary>Nitumie App gani na config hizi?</summary><p>Tumia <b>HTTP Custom</b>, <b>SSH Custom</b>, <b>HTTP Injector</b> au <b>NPV Tunnel</b>. Unaweza kuzipakua kupitia sehemu ya “Pakua App” kwenye ukurasa wa Nyumbani.</p></details>
+  <details class="rv"><summary>Nikilipa, config yangu inakwenda wapi?</summary><p>Inaonekana papo hapo na pia inahifadhiwa ndani ya “Config Zangu” kwenye akaunti yako. Utapata pia notification.</p></details>
+  <details class="rv"><summary>Nikipata tatizo nifanyeje?</summary><p>Wasiliana nasi moja kwa moja kupitia WhatsApp, au tazama video ya maelekezo kwenye YouTube.</p></details>
+</div></section>
+<section class="pad" id="msaada" style="padding-top:20px"><div class="wrap">
+  <div class="head rv"><h2>Unahitaji msaada?</h2><p>Tuko tayari kukusaidia. Chagua njia unayopendelea.</p></div>
+  <div class="help">
+    <a class="hc wa glass rv" href="https://wa.me/255719554187?text=Habari%2C%20nahitaji%20msaada%20kuhusu%20visibleTech" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i><div><strong>WhatsApp</strong><span>+255 719 554 187</span></div></a>
+    <a class="hc yt glass rv" href="#" data-placeholder="youtube-link"><i class="fa-brands fa-youtube"></i><div><strong>Video ya maelekezo</strong><span>Jifunze kutumia config yako hatua kwa hatua</span></div></a>
+  </div>
+</div></section></div>
+</main>
+
+<footer class="site"><div class="wrap">
+  <span><strong style="color:var(--ink)">visibleTech</strong> &copy; 2026. Haki zote zimehifadhiwa.</span>
+  <span style="display:flex;gap:22px">
+    <a href="https://wa.me/255719554187?text=Habari%2C%20nahitaji%20msaada%20kuhusu%20visibleTech"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+    <a href="#" data-placeholder="youtube-link"><i class="fa-brands fa-youtube"></i> YouTube</a>
+  </span>
+</div></footer>
+
+<div id="hangs"></div>
+<div id="pop-modal" class="modal hidden"><div class="sheet" id="pop-sheet" style="text-align:center"></div></div>
+
+<div id="acct-modal" class="modal hidden"><div class="sheet">
+  <div class="mh"><div><small>Akaunti Yangu</small><h3 id="acct-id">—</h3></div><button class="x" onclick="$('acct-modal').classList.add('hidden')" aria-label="Funga"><i class="fa-solid fa-xmark"></i></button></div>
+  <div class="mb">
+    <div id="acct-prem" style="margin-bottom:16px"></div>
+    <h4 style="margin-bottom:6px">Oda Zangu</h4><div id="acct-orders" style="margin-bottom:16px"></div>
+    <details style="margin-bottom:14px"><summary>Badilisha nenosiri</summary><div style="margin-top:10px;display:grid;gap:8px"><input class="in" id="pw-old" type="password" autocomplete="current-password" placeholder="Nenosiri la sasa"><input class="in" id="pw-new" type="password" autocomplete="new-password" placeholder="Nenosiri jipya (angalau herufi 8)"><button class="btn btn-pri sm" onclick="chPw()">Badilisha</button><div id="pw-msg" class="cpm"></div></div></details>
+    <button class="btn btn-ghost" style="width:100%" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i> Toka</button>
+  </div>
+</div></div>
+
+<div id="payment-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-product-title">
+ <div class="sheet">
+  <div class="mh"><div><small id="modal-sub">Kamilisha oda yako</small><h3 id="modal-product-title">Config</h3></div><button class="x" onclick="closePay()" aria-label="Funga"><i class="fa-solid fa-xmark"></i></button></div>
+  <div class="mb">
+   <div id="payment-step-1">
+    <p class="hint" id="modal-desc" style="white-space:pre-line"></p>
+    <div class="total" id="tot-row"><span>Jumla</span><span><s id="modal-old" class="hidden"></s><b id="modal-price-display">0/=</b></span></div>
+    <label class="l" for="cp-code" id="cp-lbl">Una kodi ya punguzo?</label>
+    <div class="cp"><input class="in" id="cp-code" placeholder="mfano BLACK50" autocapitalize="characters"><button class="btn btn-ghost sm" onclick="applyCoupon()">Tumia</button></div><div class="cpm" id="cp-msg"></div>
+    <div id="paid-fields">
+      <label class="l" for="checkout-phone">Namba ya simu ya malipo</label>
+      <div class="ph"><span>+255</span><input type="tel" id="checkout-phone" inputmode="numeric" placeholder="712345678" autocomplete="tel-national"></div>
+      <p class="hint">M-Pesa (Vodacom), Halotel, Tigo au Airtel.</p>
+      <span class="l" style="display:block;font-weight:700;font-size:14px;margin-bottom:8px">Chagua mtandao wa malipo</span>
+      <div class="provs">
+        <label class="provider-card"><input type="radio" name="payment_provider" value="mpesa" checked> M-Pesa</label>
+        <label class="provider-card"><input type="radio" name="payment_provider" value="halopesa"> Halo Pesa</label>
+        <label class="provider-card"><input type="radio" name="payment_provider" value="tigopesa"> Tigo Pesa</label>
+        <label class="provider-card"><input type="radio" name="payment_provider" value="airtelmoney"> Airtel Money</label>
+      </div>
+    </div>
+    <button id="pay-btn" class="btn btn-pri" onclick="startPayment()"><i class="fa-solid fa-wallet" id="pay-ico"></i> <span id="pay-btn-label">Lipa & Pata Config</span></button>
+   </div>
+   <div id="payment-step-loading" class="center hidden"><div class="spin"></div><h4 id="ld-t">Inatuma ombi la malipo...</h4><p id="ld-p">Angalia simu yako sasa na weka PIN ili kukamilisha malipo.</p></div>
+   <div id="payment-step-success" class="center hidden">
+    <i class="fa-solid fa-circle-check big ok"></i><h4 id="ok-title">Malipo yamefanikiwa!</h4><p id="ok-text">Asante kwa kuiamini visibleTech. Config yako pia imehifadhiwa ndani ya “Config Zangu”.</p>
+    <div class="cfg"><span id="final-config-uri"></span><button onclick="copyText(currentConfig);showToast('Config imenakiliwa!')">Nakili</button></div>
+    <div class="two"><button class="btn btn-ghost" onclick="dlConfig(currentConfig)"><i class="fa-solid fa-file-arrow-down"></i> Pakua</button><button class="btn btn-pri" onclick="closePay();location.hash='#/configs'">Maliza</button></div>
+   </div>
+   <div id="payment-step-id" class="hidden">
+    <div class="center"><i class="fa-solid fa-circle-check big ok"></i><h4>Malipo yamefanikiwa!</h4></div>
+    <p class="hint" id="id-help"></p>
+    <label class="l" for="id-input" id="id-label"></label>
+    <input class="in" id="id-input" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <div class="cpm" id="id-msg"></div>
+    <button class="btn btn-pri" style="width:100%" onclick="sendHwid()"><i class="fa-solid fa-paper-plane"></i> Tuma na Pata Config</button>
+    <p class="hint" style="margin-top:12px">Ukifunga hapa, unaweza kuweka ID baadaye ndani ya “Config Zangu”.</p>
+   </div>
+   <div id="payment-step-failed" class="center hidden"><i class="fa-solid fa-circle-xmark big bad"></i><h4>Malipo yameshindikana</h4><p id="fail-message"></p><button class="btn btn-pri" style="width:100%;margin-top:18px" onclick="showPayStep('1')">Jaribu tena</button></div>
+  </div>
+ </div>
+</div>
+<div id="pwa-bar" class="hidden" role="dialog" aria-label="Weka kama app"><img src="/icon-192.png" alt="" width="44" height="44"><div class="pt"><b>Weka visibleTech kama App</b><span>Ifungue haraka kwenye simu yako, bila kutafuta browser.</span></div><button class="btn btn-pri sm" id="pwa-go">Weka</button><button id="pwa-x" aria-label="Funga">✕</button></div>
+<div id="toast" role="status"><span id="toast-message"></span></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=n=>Number(n)?Number(n).toLocaleString('en-US')+'/=':'BURE';
+let BSIG='',ME=null,SITE={networks:[],offers:[],banners:[]},CUR=0,UNREAD=-1,LASTCODE='',CFGF='all',GRP=[],pending=null,pollTimer=null,currentConfig='',MINE=[],NOTIF=[];
+async function api(url,body){
+  const r=await fetch(url,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{});
+  let d={};try{d=await r.json()}catch(e){}
+  if(r.status===401){location.reload();throw 0}
+  d._ok=r.ok;return d;
+}
+let toastT;function showToast(m){$('toast-message').textContent=m;$('toast').classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>$('toast').classList.remove('show'),4200)}
+function copyText(t){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}if(navigator.clipboard)navigator.clipboard.writeText(t).catch(()=>{});document.body.removeChild(a)}
+function dlConfig(t,name){const a=document.createElement('a');if(isImg(t)){a.download=(name||'visibleTech-eSIM')+'.png';a.href=t}else{a.download=(name||'visibleTech-Config')+'.txt';a.href=URL.createObjectURL(new Blob([t],{type:'text/plain'}))}a.style.display='none';document.body.appendChild(a);a.click();document.body.removeChild(a);showToast('Download started!')}
+/* scroll reveal */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
+function reveal(){document.querySelectorAll('.rv:not(.in)').forEach((el,i)=>{el.style.transitionDelay=(i%6)*70+'ms';io.observe(el)})}
+/* banners (branding, promos, coupons) - set in the admin panel */
+const chip=c=>c?'<span class="code" data-code="'+esc(c)+'" title="Tap to copy">'+esc(c)+' <i class="fa-regular fa-copy"></i></span>':'';
+const bcls=b=>'cc-'+(b.bg?'custom':esc(b.color))+(b.anim?'':' noanim'),bsty=b=>b.bg?' style="background:'+esc(b.bg)+';color:'+esc(b.fg||'#fff')+'"':'';
+const bimg=(b,c)=>b.img?'<img class="'+(c||'bimg')+'" src="'+esc(b.img)+'" alt="">':'';
+const bbtn=(b,c)=>b.btn&&b.link?'<a class="'+(c||'bbtn')+'" href="'+esc(b.link)+'"'+(/^https?:/.test(b.link)?' target="_blank" rel="noopener"':'')+'>'+esc(b.btn)+'</a>':'';
+const bx=b=>b.dismiss?'<button class="bx" data-hx="'+b.id+'" aria-label="Funga">✕</button>':'';
+function closePop(){$('pop-modal').classList.add('hidden')}
+function renderBanners(){
+  const p=curPage(),seen=JSON.parse(sessionStorage.getItem('hx')||'[]');
+  const B=(SITE.banners||[]).filter(b=>(b.pages==='all'||(b.pages||'all').split(',').includes(p))&&!seen.includes(b.id)),by=k=>B.filter(b=>b.place===k);
+  const sig=p+'|'+JSON.stringify(B);if(sig===BSIG)return;BSIG=sig;
+  $('strips').innerHTML=by('top').map(b=>'<div class="strip '+bcls(b)+'"'+bsty(b)+'>'+bimg(b)+'<span><b>'+esc(b.title)+'</b> '+esc(b.text)+'</span>'+chip(b.coupon)+bbtn(b)+bx(b)+'</div>').join('');
+  $('page-banners').innerHTML=by('hero').map(b=>'<div class="hb '+bcls(b)+'"'+bsty(b)+'><div style="display:flex;gap:14px;align-items:center">'+bimg(b)+'<div><h3>'+esc(b.title)+'</h3><p>'+esc(b.text)+'</p></div></div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">'+chip(b.coupon)+bbtn(b)+'</div>'+bx(b)+'</div>').join('');
+  $('hangs').innerHTML=by('hang').slice(0,3).map((b,i)=>'<div class="hang'+(b.anim?'':' noanim')+'" style="right:'+(14+i*142)+'px;animation-delay:-'+i*1.1+'s"><div class="tag '+bcls(b)+'"'+bsty(b)+' '+(b.coupon?'data-code="'+esc(b.coupon)+'" ':'')+(b.link?'data-link="'+esc(b.link)+'"':'')+'>'+bimg(b)+'<span>'+esc(b.title)+'</span><small>'+esc(b.text)+'</small>'+(b.coupon?'<small><b>'+esc(b.coupon)+'</b></small>':'')+'</div>'+bx(b)+'</div>').join('');
+  const pb=by('popup').find(b=>!sessionStorage.getItem('pb'+b.id));
+  if(pb){sessionStorage.setItem('pb'+pb.id,'1');setTimeout(()=>{$('pop-sheet').innerHTML='<div class="'+bcls(pb)+'"'+bsty(pb)+' style="padding:30px 24px;border-radius:24px 24px 0 0'+(pb.bg?';background:'+esc(pb.bg)+';color:'+esc(pb.fg||'#fff'):'')+'">'+(pb.img?bimg(pb,'pop-img'):'<i class="fa-solid fa-gift" style="font-size:44px;margin-bottom:10px"></i>')+'<h3 style="font-size:30px">'+esc(pb.title)+'</h3><p style="font-weight:600;margin-top:6px">'+esc(pb.text)+'</p>'+(pb.coupon?'<p style="margin-top:14px">'+chip(pb.coupon)+'</p>':'')+'</div><div class="mb">'+bbtn(pb,'btn btn-gold')+'<button class="btn btn-pri" style="width:100%;margin-top:8px" onclick="closePop()">Sawa</button></div>';$('pop-modal').classList.remove('hidden')},900)}
+}
+/* clicks */
+document.addEventListener('click',e=>{
+  const bl=e.target.closest('.bbtn,.btn[href^="#/"],.btn[href^="http"]');if(bl&&bl.closest('#pop-sheet'))closePop();
+  const c=e.target.closest('[data-code]');
+  if(c&&c.dataset.code){LASTCODE=c.dataset.code;copyText(LASTCODE);showToast('Kodi '+LASTCODE+' imenakiliwa. Itumie unaponunua!');if(c.dataset.link)location.hash=c.dataset.link;else if(c.closest('.hang'))location.hash='#/offers';return}
+  const lk=e.target.closest('[data-link]');if(lk&&lk.dataset.link){const l=lk.dataset.link;if(/^https?:/.test(l))window.open(l,'_blank','noopener');else location.hash=l;return}
+  const hx=e.target.closest('[data-hx]');if(hx){const s=JSON.parse(sessionStorage.getItem('hx')||'[]');s.push(+hx.dataset.hx);sessionStorage.setItem('hx',JSON.stringify(s));BSIG='';renderBanners();return}
+  const n=e.target.closest('.nets button[data-n]');if(n){CUR=+n.dataset.n;drawPlans();return}
+  const f=e.target.closest('.nets button[data-cf]');if(f){CFGF=f.dataset.cf;drawMine();return}
+  const o=e.target.closest('button[data-offer]');if(o){const x=SITE.offers.find(z=>z.id==o.dataset.offer);if(x)openPay({label:x.title,desc:x.descr,price:Number(x.price)||0,offerId:x.id,esim:x.kind==='esim'});return}
+  const mb=e.target.closest('button[data-member]');if(mb){const pm=SITE.premium||{},x=(pm.plans||[]).find(z=>z.id===mb.dataset.member);if(x)openPay({label:'👑 '+pm.title+' — '+x.label,desc:'Premium inafunguka mara moja baada ya malipo.',price:Number(x.price)||0,memberId:x.id});return}
+  const b=e.target.closest('button[data-t]');if(b){const net=(SITE.networks[CUR]||{}).name||'';openPay({label:b.dataset.l,price:Number(b.dataset.p),speedType:b.dataset.t,duration:b.dataset.d,network:net})}
+});
+/* pages (menu) */
+const PAGES=['home','offers','esim','packages','premium','configs','notifs','help'];
+const curPage=()=>{const p=location.hash.replace(/^#\/?/,'');return PAGES.includes(p)?p:'home'};
+function openMenu(){$('drawer').classList.add('open');$('drawer').setAttribute('aria-hidden','false');$('menu-btn').setAttribute('aria-expanded','true');document.body.style.overflow='hidden'}
+function closeMenu(){$('drawer').classList.remove('open');$('drawer').setAttribute('aria-hidden','true');$('menu-btn').setAttribute('aria-expanded','false');document.body.style.overflow=''}
+function route(){
+  const p=curPage();
+  document.querySelectorAll('.page').forEach(e=>e.classList.toggle('hidden',e.dataset.page!==p));
+  document.querySelectorAll('.dp a.mi').forEach(a=>a.classList.toggle('on',a.dataset.p===p));closeMenu();
+  document.querySelectorAll('.page:not(.hidden) .rv').forEach(e=>e.classList.add('in'));
+  window.scrollTo(0,0);renderBanners();
+  if(p==='notifs')openNotifsPage();
+  if(p==='esim'||p==='offers'||p==='packages'||p==='premium')loadSite();
+  if(p==='esim'||p==='configs')loadMine();
+}
+window.addEventListener('hashchange',route);
+/* premium */
+function applyTheme(){const p=SITE.premium||{},on=!!p.active;document.body.classList.toggle('prem',on);const m=document.querySelector('meta[name=theme-color]');if(m)m.content=on?'#0A0805':'#070D0A';
+  document.querySelectorAll('.pmi').forEach(a=>a.classList.toggle('hidden',!p.on&&!on));
+  const nm=((ME&&(ME.name||ME.email))||'').split(' ')[0].split('@')[0].slice(0,14);$('acct-btn').innerHTML=(on?'👑 ':'<i class="fa-regular fa-user"></i> ')+esc(nm||'Akaunti')}
+function renderPremium(){const p=SITE.premium||{};applyTheme();$('pm-title').textContent=p.title||'Premium';
+  $('pm-status').textContent=p.active?'Wewe ni mwanachama wa Premium hadi '+p.until+'.':'Fungua vifurushi, ofa na eSIM za kipekee kwa wanachama wa Premium.';
+  $('pm-perks').innerHTML=(p.perks||[]).map(t=>'<li><i class="fa-solid fa-crown"></i> '+esc(t)+'</li>').join('');
+  $('pm-h').textContent=p.active?'Ongeza muda wa Premium':'Chagua muda wa Premium';
+  $('pm-plans').innerHTML=p.on?((p.plans||[]).map(x=>'<div class="pm-plan"><div><b>'+esc(x.label)+'</b><small>Siku '+Number(x.days)+'</small></div><div class="pr">'+money(x.price)+'</div><button class="btn btn-pri sm" data-member="'+esc(x.id)+'"><i class="fa-solid fa-crown"></i> '+(p.active?'Ongeza':'Pata')+'</button></div>').join('')||'<p class="mute">Mipango ya Premium inakuja hivi karibuni.</p>'):'<p class="mute">Premium haipatikani kwa sasa.</p>'}
+function lockCard(){const p=SITE.premium||{};return p.on&&!p.active&&p.locked>0?'<a class="pm-lock glass" href="#/premium"><span>👑</span><div><b>Kuna maudhui '+p.locked+' ya Premium</b><small>Pata Premium kufungua vifurushi na ofa za kipekee.</small></div><i class="fa-solid fa-chevron-right"></i></a>':''}
+/* offers + packages */
+function offerCard(x,ic){return '<article class="offer glass rv"><div class="ico"><i class="fa-solid '+ic+'"></i></div><span class="stk '+(x.free?'ok':'no')+'">'+(x.free?x.free+' zimebaki':'Zimeisha')+'</span><h3>'+(x.prem?'👑 ':'')+esc(x.title)+'</h3><p class="desc">'+esc(x.descr)+'</p><div class="foot"><div class="pr">'+(x.price>0?money(x.price):'BURE')+'</div><button class="btn btn-pri sm" data-offer="'+x.id+'" '+(x.free?'':'disabled')+'>'+(x.price>0?'<i class="fa-solid fa-wallet"></i> Nunua':'<i class="fa-solid fa-download"></i> Pakua bure')+'</button></div></article>'}
+function renderOffers(){renderOffers0();const lc=lockCard();if(lc)['offer-list','esim-list'].forEach(i=>$(i).insertAdjacentHTML('beforeend',lc))}
+function renderOffers0(){
+  const all=SITE.offers||[],o=all.filter(x=>x.kind!=='esim'),e=all.filter(x=>x.kind==='esim');
+  $('offer-list').innerHTML=o.length?o.map(x=>offerCard(x,'fa-key')).join(''):'<p class="mute">Ofa mpya zinakuja hivi karibuni.</p>';
+  $('esim-list').innerHTML=e.length?e.map(x=>offerCard(x,'fa-sim-card')).join(''):'<p class="mute">eSIM mpya zinakuja hivi karibuni.</p>';
+  reveal();
+}
+function drawPlans(){drawPlans0();const lc=lockCard();if(lc)$('plans').insertAdjacentHTML('beforeend',lc)}
+function drawPlans0(){
+  const nets=SITE.networks||[];
+  if(!nets.some(n=>n.plans.length)){$('plans').innerHTML='<p class="mute">Vifurushi vipya vinakuja hivi karibuni.</p>';$('nets').innerHTML='';return}
+  if(CUR>=nets.length)CUR=0;const n=nets[CUR];
+  $('pk-title').textContent=(n.prem?'👑 Premium — ':'Vifurushi vya ')+n.name;
+  $('nets').innerHTML=nets.length>1?nets.map((x,i)=>'<button class="'+(i==CUR?'on':'')+'" data-n="'+i+'">'+(x.prem?'👑 ':'')+esc(x.name)+'</button>').join(''):'';
+  $('plans').innerHTML=n.plans.map(p=>'<article class="plan glass '+esc(p.cls)+'"><header><h3>'+esc(p.title)+'</h3><span>'+esc(p.range)+'</span></header>'+
+    p.rows.map(r=>'<div class="row'+(r.best?' best':'')+'"><div class="d">'+esc(r.label)+(r.best?'<span class="tag">Inapendekezwa</span>':'')+'<small>'+esc(r.small)+'</small></div><div class="p">'+money(r.price)+'</div><button class="btn btn-pri sm" data-t="'+esc(p.id)+'" data-d="'+esc(r.d)+'" data-p="'+Number(r.price)+'" data-l="'+esc(n.name+' — '+p.title+' — '+r.label)+'">Nunua</button></div>').join('')+
+    '<footer><i class="fa-solid fa-circle-check"></i>'+esc(p.footer)+'</footer></article>').join('');
+}
+async function loadSite(first){
+  const d=await api('/api/site');if(!d._ok)return;SITE=d;
+  document.title='visibleTech – Online Cloud Config';
+  renderBanners();renderOffers();drawPlans();renderPremium();
+  const wa='https://wa.me/'+SITE.whatsapp+'?text=Habari%2C%20nahitaji%20msaada%20kuhusu%20'+encodeURIComponent(SITE.name);
+  document.querySelectorAll('a[href^="https://wa.me/"]').forEach(a=>a.href=wa);
+  document.querySelectorAll('a[data-placeholder="youtube-link"]').forEach(a=>{if(SITE.youtube){a.href=SITE.youtube;a.target='_blank';a.rel='noopener'}});
+}
+/* purchased configs: grouped by type, can be deleted */
+async function loadMine(){const d=await api('/api/my-configs');MINE=d.items||[];drawMine()}
+function rankNet(n){if(n==='Offers')return 9000;const i=(SITE.networks||[]).findIndex(x=>x.name===n);return i<0?5000:i*100}
+function rankGrp(g){if(g.net==='Offers')return 9000;const ni=(SITE.networks||[]).findIndex(x=>x.name===g.net);if(ni<0)return 5000;const pi=SITE.networks[ni].plans.findIndex(p=>p.title===g.plan);return ni*100+(pi<0?50:pi)}
+function drawMine(){
+  const el=$('mine-list'),box=$('cfg-chips');drawEsimMine();
+  const CFG=MINE.map((m,i)=>i).filter(i=>!isEs(MINE[i]));
+  if(!CFG.length){box.innerHTML='';el.innerHTML='<div class="glass" style="padding:26px;text-align:center"><i class="fa-solid fa-box-open" style="font-size:34px;color:var(--mute)"></i><p class="mute" style="margin-top:8px">Bado huna config yoyote. Ukinunua, itaonekana hapa.</p></div>';return}
+  const nets=[...new Set(CFG.map(i=>MINE[i].net))].sort((a,b)=>rankNet(a)-rankNet(b));
+  if(CFGF!=='all'&&!nets.includes(CFGF))CFGF='all';
+  const chip=(k,l,c)=>'<button class="'+(CFGF===k?'on':'')+'" data-cf="'+esc(k)+'">'+esc(l)+' ('+c+')</button>';
+  box.innerHTML=nets.length>1?chip('all','Zote',CFG.length)+nets.map(n=>chip(n,n==='Offers'?'🔥 Ofa':n,CFG.filter(i=>MINE[i].net===n).length)).join(''):'';
+  const groups={};
+  CFG.forEach(i=>{const m=MINE[i];if(CFGF!=='all'&&m.net!==CFGF)return;const k=m.net+'|'+m.plan;(groups[k]=groups[k]||{net:m.net,plan:m.plan,items:[]}).items.push(i)});
+  GRP=Object.values(groups).sort((a,b)=>rankGrp(a)-rankGrp(b)||a.plan.localeCompare(b.plan));
+  el.innerHTML=GRP.map((g,gi)=>'<div class="gh"><h3>'+(g.net==='Offers'?'🔥 '+esc(g.plan):esc(g.net)+' · '+esc(g.plan))+'</h3><span>'+g.items.length+' config</span><button class="btn btn-ghost sm btn-del" onclick="delGroup('+gi+')"><i class="fa-regular fa-trash-can"></i> Futa zote</button></div><div class="mine">'+
+    g.items.map(i=>{const m=MINE[i];if(m.need_id)return '<div class="cfgc glass"><div class="t"><div><b>'+esc(m.label||m.package)+'</b><small>'+esc(m.t)+' · '+money(m.price)+'</small></div><i class="fa-solid fa-hourglass-half" style="color:var(--gold)"></i></div><p class="hint">Malipo yamepokelewa ✅ Weka '+esc(m.idn)+' ya '+esc(m.app)+' ili upate config yako.</p><p class="hint">'+esc(m.fmt)+'</p><input class="in" id="mid'+i+'" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="'+esc(m.idn)+'"><div class="cpm" id="mmsg'+i+'"></div><button class="btn btn-pri sm" onclick="mineHwid('+i+')"><i class="fa-solid fa-paper-plane"></i> Tuma ID</button></div>';return '<div class="cfgc glass'+(isImg(m.config)?' isimg':'')+'"><div class="t"><div><b>'+esc(m.label||m.package)+'</b><small>'+esc(m.t)+' · '+money(m.price)+'</small></div><i class="fa-solid fa-circle-check ok"></i></div>'+cfgBox(m.config)+'<div class="two"><button class="btn btn-pri sm" onclick="copyText(MINE['+i+'].config);showToast(\'Config imenakiliwa!\')"><i class="fa-regular fa-copy"></i> Nakili</button><button class="btn btn-ghost sm" onclick="dlConfig(MINE['+i+'].config,\'config-\'+MINE['+i+'].t.slice(0,10))"><i class="fa-solid fa-file-arrow-down"></i> Pakua</button><button class="btn btn-ghost sm btn-del" onclick="delCfgs([MINE['+i+'].token])" aria-label="Futa"><i class="fa-regular fa-trash-can"></i></button></div></div>'}).join('')+'</div>').join('');
+}
+function delGroup(gi){const g=GRP[gi];if(g)delCfgs(g.items.map(i=>MINE[i].token))}
+async function delCfgs(tokens){
+  if(!tokens.length||!confirm((tokens.length>1?'Futa config '+tokens.length+'?':'Futa config hii?')+' Hatua hii haiwezi kurudishwa, hakikisha umeihifadhi kwanza.'))return;
+  const d=await api('/api/my-configs/delete',{tokens});
+  if(d._ok){MINE=MINE.filter(m=>!tokens.includes(m.token));drawMine();showToast('Imefutwa.')}else showToast(d.error||'Imeshindikana. Jaribu tena.');
+}
+/* checkout */
+function setTotal(){
+  const p=pending,price=p.price2!=null?p.price2:p.price,free=price===0;p.free=free;
+  $('modal-price-display').textContent=money(price);$('modal-old').textContent=money(p.price);$('modal-old').classList.toggle('hidden',p.price2==null);
+  $('paid-fields').style.display=free?'none':'';$('pay-btn-label').textContent=free?(p.price===0?'Pakua Config':'Pata Config Bure'):(p.esim?'Lipa & Pata eSIM':'Lipa & Pata Config');
+  const pure=p.price===0;  // free offer / eSIM: no coupon, no total, no payment wording at all
+  ['tot-row','cp-lbl','cp-msg'].forEach(x=>$(x).classList.toggle('hidden',pure));document.querySelector('#payment-step-1 .cp').classList.toggle('hidden',pure);
+  $('modal-sub').textContent=pure?'Pakua config bure':'Kamilisha oda yako';$('pay-ico').className=pure?'fa-solid fa-download':'fa-solid fa-wallet';
+}
+function openPay(o){
+  pending=Object.assign({price2:null,coupon:''},o);
+  $('modal-product-title').textContent=o.label;$('modal-desc').textContent=o.desc||'';$('modal-desc').classList.toggle('hidden',!o.desc);
+  $('cp-code').value=LASTCODE;$('cp-msg').textContent='';$('cp-msg').className='cpm';
+  const pf=normPhone(ME&&ME.phone);$('checkout-phone').value=pf.length===10?pf:'';
+  setTotal();showPayStep('1');$('payment-modal').classList.remove('hidden');
+  if(LASTCODE&&o.price)applyCoupon();
+}
+async function applyCoupon(){
+  const code=$('cp-code').value.trim(),m=$('cp-msg');if(!code){pending.price2=null;pending.coupon='';m.textContent='';setTotal();return}
+  const d=await api('/api/coupon',{code:code,offer_id:pending.offerId||'',member_id:pending.memberId||'',speed_type:pending.speedType||'',duration:pending.duration||''});
+  if(d._ok){pending.coupon=code;pending.price2=d.price;m.className='cpm ok';m.textContent='✅ Kodi imekubaliwa ('+d.label+')'}
+  else{pending.coupon='';pending.price2=null;m.className='cpm no';m.textContent=d.error||'Kodi si sahihi.'}
+  setTotal();
+}
+const isImg=c=>/^data:image\//.test(c||''),isLnk=c=>/^https?:\/\/\S+$/.test((c||'').trim());
+const lnkBtn=c=>isLnk(c)?'<a class="btn btn-ghost sm" style="margin-top:8px" href="'+esc(c.trim())+'" target="_blank" rel="noopener"><i class="fa-solid fa-up-right-from-square"></i> Fungua link</a>':'';
+const qrImg=c=>'<img class="qr" alt="eSIM QR code" src="'+esc(c)+'">';
+const isEs=m=>m.kind==='esim'||m.net==='eSIM';
+function esimParts(c){c=String(c||'').trim();let d={};
+  if(c[0]==='{'){try{d=JSON.parse(c)||{}}catch(e){}}else if(isImg(c))d={qr:c};else if(/^https?:\/\/\S+$/i.test(c))d={link:c};else if(c)d={code:c};
+  const qr=isImg(d.qr)?d.qr:'',link=/^https?:\/\/\S+$/i.test(d.link||'')?d.link:'',code=String(d.code||''),re=/LPA:1\$([^$\s&"'<>]+)\$([^$\s&"'<>]*)(\$[^\s&"'<>]*)?/i;
+  const dec=t=>{try{return decodeURIComponent(t)}catch(e){return t}},mc=dec(code).match(re),ml=dec(link).match(re),m=mc||ml;
+  return {qr,link,lpa:m?m[0]:'',smdp:String(d.smdp||'')||(m?m[1]:''),act:mc?mc[2]:(code||(ml?ml[2]:''))}}
+const esRow=(l,v)=>v?'<div class="esr"><small>'+esc(l)+'</small><code>'+esc(v)+'</code><button class="btn btn-ghost sm" data-v="'+esc(v)+'" onclick="copyText(this.dataset.v);showToast(\'Imenakiliwa!\')"><i class="fa-regular fa-copy"></i> Nakili</button></div>':'';
+function esimBox(c){const p=esimParts(c);
+  return '<div class="esb">'+(p.qr?qrImg(p.qr)+'<div class="esa"><a class="btn btn-ghost sm" download="visibleTech-eSIM-QR.png" href="'+esc(p.qr)+'"><i class="fa-solid fa-file-arrow-down"></i> Pakua QR</a></div>':'')
+  +(p.link?'<div class="esa"><a class="btn btn-pri sm" href="'+esc(p.link)+'" target="_blank" rel="noopener"><i class="fa-solid fa-up-right-from-square"></i> Fungua link ya eSIM</a></div>'+esRow('Link ya eSIM',p.link):'')
+  +esRow('Activation code (LPA)',p.lpa)+esRow('SM-DP+ Address',p.smdp)+esRow('Activation Code',p.act)+'</div>'}
+function drawEsimMine(){const w=$('esim-mine-wrap'),el=$('esim-mine');if(!w)return;const L=MINE.filter(isEs);w.classList.toggle('hidden',!L.length);
+  el.innerHTML=L.map(m=>'<div class="cfgc glass"><div class="t"><div><b>'+esc(m.package)+'</b><small>'+esc(m.t)+' · '+money(m.price)+'</small></div><i class="fa-solid fa-circle-check ok"></i></div>'+esimBox(m.config)+'<div class="two"><button class="btn btn-ghost sm btn-del" onclick="delCfgs([\''+esc(m.token)+'\'])"><i class="fa-regular fa-trash-can"></i> Futa</button></div></div>').join('')}
+const cfgBox=c=>isImg(c)?qrImg(c):'<pre class="code2">'+esc(c)+'</pre>'+lnkBtn(c);
+function showCfg(){const es=!!(pending&&pending.esim);$('final-config-uri').innerHTML=es?esimBox(currentConfig):isImg(currentConfig)?qrImg(currentConfig):esc(currentConfig)+lnkBtn(currentConfig);$('payment-step-success').classList.toggle('isimg',es||isImg(currentConfig))}
+function showPayStep(s){['1','loading','success','failed','id'].forEach(x=>$('payment-step-'+x).classList.toggle('hidden',x!==s))}
+function closePay(){$('payment-modal').classList.add('hidden');if(pollTimer){clearInterval(pollTimer);pollTimer=null}}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeMenu();document.querySelectorAll('.modal').forEach(m=>m.classList.add('hidden'))}});
+$('checkout-phone').addEventListener('input',function(){this.value=this.value.replace(/\D/g,'').substring(0,12)});
+function normPhone(raw){let p=String(raw||'').replace(/\D/g,'');if(p.startsWith('255')&&p.length===12)p='0'+p.substring(3);if(p.length===9)p='0'+p;return p}
+async function startPayment(){
+  if(!pending)return;let phone='';
+  if(!pending.free){phone=normPhone($('checkout-phone').value);
+    if(phone.length!==10||!phone.startsWith('0')){showToast('Weka namba sahihi yenye tarakimu 10.');return}}
+  const fr=pending.price===0;$('ld-t').textContent=fr?'Inaandaa config yako...':'Inatuma ombi la malipo...';$('ld-p').textContent=fr?'Subiri kidogo.':'Angalia simu yako sasa na weka PIN ili kukamilisha malipo.';
+  showPayStep('loading');
+  try{
+    const d=await api('/api/buy-direct',{offer_id:pending.offerId||'',member_id:pending.memberId||'',speed_type:pending.speedType||'',duration:pending.duration||'',coupon:pending.coupon||'',phone:phone});
+    if(d.status==='success'){
+      if(d.free){currentConfig=d.config||'';okTexts(pending.price===0);showCfg();showPayStep('success');showToast('Config yako iko tayari!');afterBuy()}
+      else startPolling(d.access_token);
+    }else showFailed(d.message||d.error||'Kuna hitilafu. Jaribu tena.');
+  }catch(e){if(e!==0)showFailed('Tatizo la network. Jaribu tena.')}
+}
+let idTok='';
+function okTexts(free){if(pending&&pending.memberId){$('ok-title').textContent='Karibu Premium! 👑';$('ok-text').textContent='Premium yako imewashwa. Vifurushi na ofa za Premium sasa zimefunguka.';return}if(pending&&pending.esim){$('ok-title').textContent='Malipo yamefanikiwa!';$('ok-text').textContent='eSIM yako iko tayari. Pia imehifadhiwa ndani ya ukurasa wa eSIM, sehemu ya “eSIM Zangu”.';return}$('ok-title').textContent=free?'Config yako iko tayari!':'Malipo yamefanikiwa!';$('ok-text').textContent=free?'Imehifadhiwa ndani ya “Config Zangu”. Unaweza kuinakili au kuipakua.':'Asante kwa kuiamini visibleTech. Config yako pia imehifadhiwa ndani ya “Config Zangu”.'}
+function showIdStep(token,i){idTok=token;$('id-label').textContent='Weka '+i.idn+' ya '+i.app;$('id-help').textContent=i.fmt||'';$('id-input').value='';$('id-msg').textContent='';showPayStep('id')}
+async function sendHwid(){const v=$('id-input').value.trim(),m=$('id-msg');m.className='cpm no';if(!v){m.textContent='Weka ID kwanza.';return}
+  const d=await api('/api/order/hwid',{token:idTok,hwid:v});
+  if(d.status==='success'){currentConfig=d.config||'';okTexts(false);showCfg();showPayStep('success');showToast('Config yako iko tayari!');afterBuy()}else m.textContent=d.message||d.error||'ID si sahihi.'}
+async function mineHwid(i){const m=MINE[i],v=$('mid'+i).value.trim(),el=$('mmsg'+i);el.className='cpm no';if(!v){el.textContent='Weka ID kwanza.';return}
+  const d=await api('/api/order/hwid',{token:m.token,hwid:v});
+  if(d.status==='success'){showToast('Config yako iko tayari!');loadMine();loadNotifs()}else el.textContent=d.message||d.error||'ID si sahihi.'}
+function afterBuy(){loadMine();loadNotifs();loadSite()}
+function startPolling(token){
+  let n=0;pollTimer=setInterval(async()=>{
+    if(++n>75){clearInterval(pollTimer);pollTimer=null;showFailed('Muda umeisha. Kama ulilipa, angalia "Config Zangu" na Notification zako.');loadNotifs();return}
+    try{const d=await api('/api/order/status/'+encodeURIComponent(token));
+      if(d.payment_status==='success'){clearInterval(pollTimer);pollTimer=null;currentConfig=d.config||'';okTexts(false);showCfg();showPayStep('success');showToast('Malipo yamefanikiwa!');afterBuy()}
+      else if(d.payment_status==='need_id'){clearInterval(pollTimer);pollTimer=null;showIdStep(token,d);showToast('Malipo yamefanikiwa! Weka ID yako.');afterBuy()}
+      else if(d.payment_status==='failed'){clearInterval(pollTimer);pollTimer=null;showFailed('Malipo yameshindikana. Hakuna pesa iliyokatwa. Jaribu tena.');loadNotifs()}
+      else if(d.payment_status==='no_stock'){clearInterval(pollTimer);pollTimer=null;showFailed('Malipo yamepokelewa lakini config zimeisha. Wasiliana nasi kurejeshewa pesa.');loadNotifs()}
+    }catch(e){}
+  },4000);
+}
+function showFailed(m){$('fail-message').textContent=m;showPayStep('failed')}
+/* notifications (own page, customer can delete) */
+const NI={paid:'fa-circle-check',issue:'fa-triangle-exclamation',pending:'fa-hourglass-half',info:'fa-bullhorn'};
+function setBadge(n){UNREAD=n;const b=$('bell-n');b.textContent=n>99?'99+':n;b.classList.toggle('hidden',!n);const m=$('menu-nt-n');m.textContent=n>99?'99+':n;m.classList.toggle('hidden',!n)}
+async function loadNotifs(){
+  const d=await api('/api/notifications');if(!d._ok)return;NOTIF=d.items||[];setBadge(d.unread||0);
+  if(curPage()==='notifs')drawNotifs();
+}
+function drawNotifs(){
+  $('nt-clear').classList.toggle('hidden',!NOTIF.length);$('nt-count').textContent=NOTIF.length?NOTIF.length+' notification':'';
+  $('nt-list').innerHTML=NOTIF.length?NOTIF.map(n=>'<div class="nt '+esc(n.kind)+(n.read?'':' un')+'"><div class="ni"><i class="fa-solid '+(NI[n.kind]||NI.info)+'"></i></div><div style="flex:1;min-width:0"><b>'+esc(n.title)+'</b><p>'+esc(n.body)+'</p><small>'+esc(n.t)+'</small></div><button class="x del" onclick="delNotif('+n.id+')" aria-label="Futa arifa"><i class="fa-regular fa-trash-can"></i></button></div>').join(''):'<p class="mute" style="text-align:center;padding:20px">Hakuna arifa bado.</p>';
+}
+async function openNotifsPage(){
+  await loadNotifs();
+  if(UNREAD>0){await api('/api/notifications/read',{all:1});setBadge(0)}
+}
+async function delNotif(id){const d=await api('/api/notifications/delete',{id});if(d._ok){NOTIF=NOTIF.filter(n=>n.id!==id);drawNotifs();setBadge(NOTIF.filter(n=>!n.read).length)}}
+async function delAllNotifs(){if(!NOTIF.length||!confirm('Futa notification zote?'))return;const d=await api('/api/notifications/delete',{all:1});if(d._ok){NOTIF=[];drawNotifs();setBadge(0)}}
+/* account */
+const ST={success:'Imekamilika',pending:'Inasubiri malipo',failed:'Imeshindikana',no_stock:'Zimeisha'};
+async function openAcct(){
+  $('acct-id').textContent=ME.name||ME.email||'+'+ME.phone;$('acct-orders').textContent='...';{const p=SITE.premium||{};$('acct-prem').innerHTML=p.on?(p.active?'<div class="pm-acct">👑 Premium hadi '+esc(p.until)+' <a class="btn btn-gold sm" href="#/premium" onclick="$(\'acct-modal\').classList.add(\'hidden\')">Ongeza muda</a></div>':'<a class="btn btn-gold" style="width:100%" href="#/premium" onclick="$(\'acct-modal\').classList.add(\'hidden\')">👑 Pata Premium</a>'):''}$('acct-modal').classList.remove('hidden');
+  const d=await api('/api/my-orders');
+  $('acct-orders').innerHTML=(d.orders||[]).map(o=>'<div class="ord"><div>'+esc(o.package)+'<small>'+esc(o.t)+' · '+money(o.price)+' · '+(ST[o.status]||esc(o.status))+'</small></div>'+(o.status==='success'&&!o.hidden?'<a href="#/configs" onclick="$(\'acct-modal\').classList.add(\'hidden\')">Config Zangu</a>':'')+'</div>').join('')||'<p class="mute">Bado huna oda yoyote.</p>';
+}
+async function chPw(){const m=$('pw-msg');const d=await api('/api/auth/password',{old:$('pw-old').value,new:$('pw-new').value});m.className='cpm '+(d._ok?'ok':'no');m.textContent=d._ok?'Nenosiri limebadilishwa.':(d.error||'Kuna hitilafu.');if(d._ok){$('pw-old').value='';$('pw-new').value=''}}
+async function doLogout(){try{await api('/api/auth/logout',{})}catch(e){}location.reload()}
+/* start */
+(async()=>{
+  const m=await api('/api/me');if(!m.user){location.reload();return}
+  ME=m.user;const nm=(ME.name||ME.email||'').split(' ')[0].split('@')[0].slice(0,14);
+  $('acct-btn').innerHTML='<i class="fa-regular fa-user"></i> '+esc(nm||'Akaunti');$('hello').textContent=nm?'· Karibu, '+nm:'';
+  reveal();await loadSite(true);await loadMine();loadNotifs();route();
+  setInterval(loadNotifs,30000);setInterval(()=>loadSite(false),20000);document.addEventListener('visibilitychange',()=>{if(!document.hidden){loadSite(false);loadMine()}});
+})();
+</script>
+<script>
+/* install as an app (Chrome): bottom bar, can be closed (hidden 7 days), never shown again once installed */
+(function(){
+ if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
+ const bar=document.getElementById('pwa-bar'),K='vs_pwa_x',OK='vs_pwa_ok';let ev=null;
+ const ls=(f)=>{try{return f(localStorage)}catch(e){return null}};
+ const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+ const blocked=()=>standalone()||ls(l=>l.getItem(OK))||(()=>{const t=+ls(l=>l.getItem(K))||0;return t&&Date.now()-t<7*864e5})();
+ const hide=()=>bar.classList.add('hidden'),snooze=()=>ls(l=>l.setItem(K,String(Date.now())));
+ if(standalone())ls(l=>l.setItem(OK,'1'));
+ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();ev=e;if(!blocked())bar.classList.remove('hidden')});
+ window.addEventListener('appinstalled',()=>{ev=null;hide();ls(l=>l.setItem(OK,'1'))});
+ document.getElementById('pwa-x').onclick=()=>{hide();snooze()};
+ document.getElementById('pwa-go').onclick=async()=>{hide();if(!ev)return;ev.prompt();try{const r=await ev.userChoice;if(r.outcome!=='accepted')snooze()}catch(e){}ev=null};
+})();
+</script>
+</body>
+</html>
